@@ -1,0 +1,1343 @@
+metadata:
+  title: Debt collector letter
+  short title: Debt collector letter
+  comment: This program creates a letter to tell a collection agency that a debt is exempt from collection under federal and Illinois law.
+  authors:
+    - Matt Newsted
+---
+include:
+  - docassemble.AssemblyLine:assembly_line.yml
+  - docassemble.ILAO:ilao-interview-framework.yml
+  - docassemble.ILAO:shared-basic-questions.yml
+---
+objects:
+  - user: ALIndividual
+  - debt_collector: ALIndividual
+  - income_sources: DAList
+  - car: DAObject
+  - second_car: DAObject
+---
+code: |
+  ilao_easy_form_title = "Debt collector letter"
+  ilao_easy_form_url = "https://www.illinoislegalaid.org/legal-information/collection-proof-debtor-letter"
+  github_user = 'IllinoisLegalAidOnline'
+  github_repo_name = 'docassemble-CollectionProofLetter'
+---
+# Road map
+sections:
+  - section_intro: Start
+  - section_debt: Debt collector info    
+  - section_income: Income details
+  - section_property: Property details
+  - section_about_you: About you and letter info
+  - section_download: Download
+---
+# interview order block
+mandatory: True
+code: |
+  nav.set_section('section_intro')
+  sees_nav_bar
+  snapshot_start
+  set_progress(5)
+  how_to_use
+  accept_terms
+  
+  nav.set_section('section_debt')
+  debt_information
+  sued_by_debt_collector
+  if debt_collector_contact == False:
+    not_qualified_no_contact
+  nav.set_section('section_income')
+  debt_collector.name.first
+  account_number
+  debt_collector.address.address
+  able_to_pay
+  validate_debt
+  dispute_debt
+  contact_prefs
+  
+  set_progress(10)
+  has_employment_income
+  if has_employment_income == True:
+    employment_income_amount  
+    if employment_income_exempt == False:
+      not_qualified_over_income_limit  
+  exempt_income_choices
+  income_qualified
+  
+  set_progress(20)
+  nav.set_section('section_property')
+  owns_home
+  if owns_home == True:
+    if lives_in_home == False:
+      not_qualified_secondary_property
+    if owns_home == True:
+      if is_married == True:
+        owns_with_spouse
+      home_value
+      if has_mortgage:
+        mortgage_remaining
+      if has_other_home_loans:
+        other_home_loans_remaining
+      if home_equity_exempt:
+        home_qualified
+      else: 
+        not_qualified_too_much_home_equity
+  
+  set_progress(40)
+  if owns_car == True:
+    car.value
+    if car_paid_off == False:
+      car.loan
+    if is_car_exempt == False:
+      not_qualified_too_much_car_equity      
+    if owns_second_car == True:
+      second_car.value
+      if second_car_paid_off == False:
+        second_car.loan
+      if car_uses_wildcard == True:
+        if is_second_car_exempt == False:
+          not_qualified_too_much_equity_both_cars      
+      else: 
+        if is_second_car_exempt == False:
+          not_qualified_too_much_second_car_equity
+  
+  set_progress(60)
+  if has_tools == True:
+    value_tools
+  personal_property_choices
+  if property_exempt == False:
+    not_qualified_too_much_property
+  else: 
+    property_qualified
+  
+  set_progress(75)
+  nav.set_section('section_about_you')
+  user.name.first
+  user.address.address
+  
+  set_progress(85)
+  letter_date
+  
+  set_progress(100)
+  nav.set_section('section_download')
+  forms_assembling
+  snapshot_forms
+  get_docs_screen
+---
+code: |
+  stuff_to_snapshot = {
+  	'start_time': str(current_datetime().format_datetime()),
+  	'started_interview': True, 
+  	}
+
+  try:
+    stuff_to_snapshot['ip_address'] = device(ip=True)
+  except:
+    pass
+
+  stuff_to_snapshot['zip'] = showifdef('user.address.zip')
+
+  stuff_to_snapshot['downloaded_forms'] = showifdef('forms_assembling')
+  
+  store_variables_snapshot(
+  	data=stuff_to_snapshot, persistent=True
+  	)
+  snapshot_interview_state = True
+---
+code: |
+  snapshot_interview_state
+  snapshot_start = True  
+---
+code: |
+  reconsider('snapshot_interview_state')
+  snapshot_forms = True
+---
+id: welcome
+question: |
+  Debt collector letter
+subquestion: |
+  Welcome to Illinois Legal Aid Online's **Debt collector letter** Easy Form.
+
+  This program creates a letter that tells a debt collector your income and belongings are **{exempt}** from being collected. It also tells the debt collector to stop contacting you.
+  
+  The letter will explain that your income and property are exempt. This might convince a debt collector to stop trying to collect.
+
+  You can still be sued for the debt, but the debt collector will be limited in their ability to collect on a court judgment.
+
+  Learn about [**what income and property are exempt from collection**](https://www.illinoislegalaid.org/legal-information/credit-and-debt-issues).
+field: sees_nav_bar
+---
+id: instructions
+continue button field: how_to_use
+question: |
+  Instructions
+subquestion: |
+  To use this program you will need:
+
+  * A bill or demand from a debt collector,
+  * Information about your income, and
+  * An estimate of the value of your things.
+
+  Set aside 5 to 10 minutes to finish this program. You can login and save your work to return to later. 
+
+  ${ collapse_template(help_example) }  
+
+  Click on **{green words}** to learn what they mean. Some pages have a question mark in a circle ${ fa_icon("question-circle", color_css="#0dcaf0" ) } that helps explain things.
+
+  After you download your letter, you must mail it to the debt collector.
+---
+template: help_example
+subject: |
+  **You can click sections like this to show more information.**
+content: |  
+  This is an example of help. Click again to hide.
+---
+id: debt information
+continue button field: debt_information
+question: |
+  Debt information
+subquestion: |
+  Special rules apply to certain kinds of debt, including:
+
+  * Overdue child support,
+  * Overdue maintenance (formerly called alimony),
+  * Court-ordered restitution to a crime victim,
+  * Back taxes, or
+  * Non-tax debt owed to a federal agency, such as student loans or some federally-funded home loans.
+  
+  You may have to pay these debts even if your income and property are **{exempt}** from being collected.
+  
+  If someone is trying to collect these debts, you might want to talk to a lawyer. Use [**Get Legal Help**](https://www.illinoislegalaid.org/get-legal-help) to find free or low-cost legal services in your area.
+---
+id: validate debt
+question: |
+  Do you want ${ debt_collector } to validate the debt?
+subquestion: |
+  Validating the debt means getting more information about the debt. This includes details about:
+
+  * Why ${ debt_collector } thinks you owe the debt,
+  * Who ${ debt_collector } thinks you owe the debt to,
+  * The amount and age of the debt, and
+  * Why ${ debt_collector } thinks they have the authority to collect the debt.
+fields:
+  - no label: validate_debt
+    datatype: yesnoradio
+---
+id: dispute debt
+question: |
+  Do you dispute the debt that ${ debt_collector } says you owe?
+subquestion: |
+  If you dispute the debt, it means you disagree with what ${ debt_collector } says you owe. You might dispute that you owe anything at all or the amount.
+  
+  Here are some examples of why you might dispute the debt:
+  
+  * "I am not responsible for the debt you're trying to collect."
+  * "The amount that you are seeking to collect is incorrect."
+  
+  **Note:** When you send your letter, be sure to attach any paperwork that supports why you dispute what they say you owe.
+fields:
+  - no label: dispute_debt
+    datatype: yesnoradio
+  - Why do you dispute this debt?: reason_for_dispute
+    datatype: area
+    maxlength: 150
+    rows: 4
+    show if:
+      variable: dispute_debt
+      is: True
+---    
+id: contact preferences
+question: |
+  How do you want ${ debt_collector } to contact you about the debt?
+subquestion: |
+  You can tell the debt collector how and when you want to be contacted: at certain times, and only at certain phone numbers, mailing addresses, or email addresses.
+fields:
+  - no label: contact_prefs
+    datatype: radio
+    choices:
+      - I want ${ debt_collector } to stop all contact with me.: stop
+      - I want ${ debt_collector } to contact me only at the ways and times I specify. (You can explain below.): ways
+  - Contact about the debt is okay in these ways:: acceptable_contact
+    datatype: area
+    maxlength: 150
+    rows: 4
+    show if:
+      variable: contact_prefs
+      is: ways
+    help: |
+      Remember to list specific days and times you want to be contacted. Also list the phone numbers, mailing addresses, or email addresses that you want them to use. 
+---
+id: unable to pay
+question: |
+  Are you able to pay the debt at this time?
+subquestion: |
+  You might have essential expenses like food, housing, medicine, and utilities that make it impossible to pay your debt right now.
+  
+  You may be able to pay the debt over time instead of sending a letter to stop contact. Learn about [**coming up with a payment plan**](https://www.illinoislegalaid.org/node/31416).
+fields:
+  - no label: able_to_pay
+    datatype: yesnoradio
+
+---
+id: sued by debt collector
+continue button field: sued_by_debt_collector
+question: |
+  Lawsuit information
+subquestion: |
+  If you receive a Complaint and Summons about a debt, you are being sued. You must respond to the lawsuit. In some cases you must file an **{Appearance}** and an **{Answer}**. Learn more about [**responding to a lawsuit**](https://www.illinoislegalaid.org/node/32236).
+
+  If you would like help finding free or low-cost legal services in your area, use [**Get Legal Help**](https://www.illinoislegalaid.org/get-legal-help).
+---
+id: contact by debt collector
+question: |
+  Have you been contacted by a debt collector?
+subquestion: |
+  The debt collector could be a collection agency or a collections lawyer. This is not the original creditor.
+
+  ${ collapse_template(creditor_definition_help) }  
+
+  The debt collector could contact you by:
+  
+  * Phone, 
+  * Letters or postcards,
+  * Email, or
+  * Text messages.
+
+fields:
+  - no label: debt_collector_contact
+    datatype: yesnoradio
+---
+template: creditor_definition_help
+subject: |
+  **Tell me more about debt collectors and creditors**
+content: |  
+  A **debt collector** is a person or company that regularly collects debts owed to another person or company. This is different than the original creditor.
+  
+  A **creditor** is the person or company that provided goods, services, or money. If someone does not pay the creditor what they owe, they can use a debt collector to try to get that money.
+
+  Different laws apply to creditors and debt collectors. This program creates a letter that you can send to a debt collector, not an original creditor.
+---
+id: not qualified no contact
+event: not_qualified_no_contact
+question: |
+  Sorry
+subquestion: |
+  You must have been contacted by a debt collector to use this program.
+buttons:
+  - Exit: exit
+  - Restart: restart
+---
+id: user name
+question: |
+  What is your name?
+subquestion: |
+    If you don't have a first name and a last name, you can enter your name in the field labeled **First** and leave the other fields blank.
+fields:
+  - First: user.name.first
+  - Middle: user.name.middle
+    required: False
+  - Last: user.name.last
+    required: False
+  - Suffix: user.name.suffix
+    help: |
+      Some names have a suffix after the last name, such as "Senior," "III," or "Jr." If your name does not have a suffix, you can leave this blank.
+    code: |
+      name_suffix()
+    required: False
+---
+id: has job
+question: |
+  Do you have a job?
+fields:
+  - no label: has_employment_income
+    datatype: yesnoradio
+---
+id: employment income
+continue button field: employment_income_amount
+question: |
+  How much do you get paid from your job?
+subquestion: |
+  This is your take-home pay after federal and state taxes.
+fields:
+  - Amount: paycheck_amount
+    datatype: currency
+    min: 0
+  - Frequency: paycheck_frequency
+    input type: radio
+    choices:
+      - Weekly: Weekly
+      - Every other week: Every other week
+      - Twice per month: Twice per month
+      - Every month: Monthly
+---
+# determines if income is exempt
+code: |
+  if paycheck_frequency == "Weekly":
+    weekly_income = paycheck_amount
+  else:
+    if paycheck_frequency == "Every other week":
+      weekly_income = paycheck_amount / 2
+    else:
+      if paycheck_frequency == "Twice per month":
+        weekly_income = paycheck_amount * 24 / 52
+      else:
+        weekly_income = paycheck_amount * 12 / 52
+
+  if weekly_income <= 675:
+    employment_income_exempt = True
+  else:
+    employment_income_exempt = False
+reconsider: True
+---
+id: exempt income
+continue button field: exempt_income_choices
+question: |
+  Exempt income
+subquestion: |
+  Some forms of income are **{exempt}**.
+
+  ${ collapse_template(exempt_income_help) }  
+
+  Which of these to you receive? Check all that apply.
+fields:
+  - Social Security retirement benefits: income_ssrb
+    datatype: yesnowide
+  - Supplemental Security Income (SSI): income_ssi
+    datatype: yesnowide
+  - Supplemental Security Disability Insurance (SSDI): income_ssdi
+    datatype: yesnowide
+  - Public assistance like SNAP (foodstamps), TANF (welfare), or GA (General Assistance): income_public_aid
+    datatype: yesnowide
+  - Veteran's benefits: income_va
+    datatype: yesnowide
+  - Pension like municipal or teachers' pension, or Railroad retirement: income_pension
+    datatype: yesnowide
+  - None of the above: income_none
+    datatype: yesnowide
+    uncheck others: True
+validation code: |
+  if not (income_ssrb or income_ssi or income_ssdi or income_public_aid or income_va or income_pension or income_none):
+    validation_error("You need to select at least one choice.", field="income_none")
+---
+template: exempt_income_help
+subject: |
+  **Show me other kinds of exempt income**
+content: |  
+  These sources of income are also **{exempt}**. You do not need to list these in your letter.
+
+  * Student loans
+  * College savings account
+  * Child support for your children
+  * Temporary support (also called alimony or maintenance)
+  * Trust fund
+  * Workers' Compensation
+  * Settlement or judgment from wrongful death or personal injury
+  * Benefits from a life insurance policy
+  * Cash awarded as victim of crime
+---
+id: not qualified over income limit
+event: not_qualified_over_income_limit  
+question: |
+  Sorry
+subquestion: |
+  You make ${ currency(weekly_income) } per week.
+  
+  If you make over $675.00 per week, your income is not protected.
+  
+  You may be able to pay the debt over time instead of having your wages garnished. Learn about [**coming up with a payment plan**](https://www.illinoislegalaid.org/node/31416).
+buttons:
+  - Exit: exit
+  - Restart: restart
+---
+id: income exempt
+continue button field: income_qualified
+question: |
+  Good news!
+subquestion: |
+  Your income is **{exempt}** from collection.
+
+  The next questions will ask about your belongings. Some things you own might not be exempt. 
+---
+sets:
+  - income_sources
+code: |
+  if income_ssrb == True:
+    income_sources.append("Social Security retirement benefits")
+  if income_ssi == True:
+    income_sources.append("Supplemental Security Insurance (SSI)")
+  if income_ssdi == True:
+    income_sources.append("Supplemental Security Disability Income (SSDI)")
+  if income_public_aid == True:
+    income_sources.append("Public assistance (TANF, Food stamps, or General Assistance)")
+  if income_va == True:
+    income_sources.append("Veteran's benefits")
+  if income_pension == True:
+    income_sources.append("pension income")
+  if has_employment_income == True:
+    income_sources.append("wages amounting to less than $675.00 per week after state and federal taxes")
+  income_sources.there_are_any = True
+  income_sources.there_is_another = False
+reconsider: True
+---
+id: owns home
+question: |
+  Do you own a home?
+subquestion: |
+  This property can be a house or a condominum.
+fields:
+  - no label: owns_home
+    datatype: yesnoradio
+---
+id: lives in home
+question: |
+  Do you live in the property you own?
+subquestion: |
+fields:
+  - no label: lives_in_home
+    datatype: yesnoradio
+---
+id: not qualified owns secondary property
+event: not_qualified_secondary_property
+question: |
+  Sorry
+subquestion: |
+  If you own a home or condominium that is not where you live, that property is not **{exempt}**.
+buttons:
+  - Exit: exit
+  - Restart: restart
+---
+id: married
+question: |
+  Are you married?
+subquestion: |
+  If you are married and own the property with your spouse, more of the value of the property is **{exempt}**.
+fields:
+  - no label: is_married
+    datatype: yesnoradio
+---
+id: owns home with spouse
+question: |
+  Do you own the property with your spouse?
+fields:
+  - no label: owns_with_spouse
+    datatype: yesnoradio
+---
+id: not qualified too much home equity
+event: not_qualified_too_much_home_equity
+question: |
+  Sorry
+subquestion: |
+  Up to ${ currency(homestead_exemption) } equity in your home is protected by law. This is called the Homestead Exemption.
+  
+  Beyond the **{exempt}** amount, there is ${ currency(home_equity - homestead_exemption) } of equity in your home.
+  
+  You may want to talk with a lawyer about protecting your home from collection. If you would like help finding free or low-cost legal services in your area, use [**Get Legal Help**](https://www.illinoislegalaid.org/get-legal-help).
+buttons:
+  - Exit: exit
+  - Restart: restart
+---
+id: home value
+question: |
+  What is the value of your home?
+subquestion: |
+  This is the amount a buyer would pay if you sold your home today. If you do not have a recent appraisal, estimate the value. 
+fields:
+  - Home value: home_value
+    datatype: currency
+    min: 0
+---
+id: mortgage on home
+question: |
+  Do you have a mortgage on your property?
+subquestion: |
+  A mortgage is money you borrowed to pay for the property.
+fields:
+  - no label: has_mortgage
+    datatype: yesnoradio
+---
+id: home value
+question: |
+  How much of the mortgage do you still have to repay?
+subquestion: |
+  This is the total amount remaining to be paid on the mortgage. 
+fields:
+  - Remaining mortgage amount: mortgage_remaining
+    datatype: currency
+    min: 0
+---
+code: |
+  if has_mortgage == False:
+      mortgage_remaining = 0
+depends on: has_mortgage
+---
+id: other home loans
+question: |
+  Do you have other loans or liens on your home?
+subquestion: |
+  Other loans or liens will reduce the amount of money you would get if you sold your home. These could include:
+  
+  * A second mortgage,
+  * A home equity loan or line of credit, or
+  * A judgment or mechanic's lien.
+fields:
+  - no label: has_other_home_loans
+    datatype: yesnoradio
+---
+id: other home loan value
+question: |
+  What is the total amount you owe on these other home loans or liens?
+fields:
+  - Amount owed on other home loans or liens: other_home_loans_remaining
+    datatype: currency
+    min: 0
+---
+code: |
+  if has_other_home_loans == False:
+    other_home_loans_remaining = 0
+depends on: has_other_home_loans
+---
+# determines if equity in home is exempt
+code: |
+  if owns_home == True:
+    if is_married == True:
+      if owns_with_spouse == True:
+        homestead_exemption = 30000
+      else:
+        homestead_exemption = 15000
+    else:
+      homestead_exemption = 15000
+    home_equity = home_value - mortgage_remaining - other_home_loans_remaining
+    if home_equity > homestead_exemption:
+      home_equity_exempt = False
+    else:
+      home_equity_exempt = True
+reconsider: True
+---
+id: home qualified
+continue button field: home_qualified
+question: |
+  Good news!
+subquestion: |
+  Based on your answers, your home is **{exempt}** from collection.
+
+  The next questions will ask about your other belongings.
+---
+id: owns car
+question: |
+  Do you own a car?
+fields:
+  - no label: owns_car
+    datatype: yesnoradio
+---
+id: car value
+question: |
+  What is the resale value of your car?
+subquestion: |
+  You can use [**Kelley Blue Book**](https://www.kbb.com/) to look up your car's resale value.
+
+  If you own more than 1 car, you will be asked about it on another screen. Enter the resale value of the more expensive car first.
+fields:
+  - Resale value: car.value
+    datatype: currency
+    min: 0
+---
+id: owes on car
+question: |
+  Have you fully paid for your car?
+subquestion: |
+  If you are still paying for this car, select **No**.
+fields:
+  - no label: car_paid_off
+    datatype: yesnoradio
+---
+id: car loan
+question: |
+  How much do you owe on your car?
+subquestion: |
+  This is the amount remaining to be paid for your car.
+fields:
+  - Amount owing: car.loan
+    datatype: currency
+    min: 0
+---
+id: owns second car
+question: |
+  Do you own a second car?
+fields:
+  - no label: owns_second_car
+    datatype: yesnoradio
+---
+id: not qualified too much car equity
+event: not_qualified_too_much_car_equity
+question: |
+  Sorry
+subquestion: |
+  Your car is **{exempt}** from collection if it is worth less than ${ currency(2400) }, minus what you still owe.
+  
+  If your car is worth more, it can still be protected if it is worth less than ${ currency(6400) }, minus what you still owe. 
+  
+  Based on your answers, there is ${ currency(car_equity) } of value in your car. Your car is not exempt from collection.
+  
+  You may want to talk with a lawyer about protecting your property from collection. If you would like help finding free or low-cost legal services in your area, use [**Get Legal Help**](https://www.illinoislegalaid.org/get-legal-help).
+buttons:
+  - Exit: exit
+  - Restart: restart
+---
+id: second car value
+question: |
+  What is the resale value of your second car?
+subquestion: |
+  You can use [**Kelley Blue Book**](https://www.kbb.com/) to look up your car's resale value.
+fields:
+  - Resale value: second_car.value
+    datatype: currency
+    min: 0
+---
+id: owes on second car
+question: |
+  Have you fully paid for your second car?
+subquestion: |
+  If you are still paying for this car, select **No**.
+fields:
+  - no label: second_car_paid_off
+    datatype: yesnoradio
+---
+id: second car loan
+question: |
+  How much do you owe on your second car?
+subquestion: |
+  This is the amount remaining to be paid for your second car.
+fields:
+  - Amount owing: second_car.loan
+    datatype: currency
+    min: 0
+---
+code: |
+  if second_car_paid_off == True:
+    second_car.loan = 0
+depends on: second_car_paid_off
+---
+code: |
+  second_car_equity = second_car.value - second_car.loan
+depends on:
+  - second_car.value
+  - second_car.loan
+---
+id: not qualified too much second car equity
+event: not_qualified_too_much_second_car_equity
+question: |
+  Sorry
+subquestion: |
+  If you have more than one car, your second car is usually **{exempt}** from collection if it is worth less than ${ currency(4000) }, minus what you still owe.
+
+  Based on your answers, there is ${ currency(second_car_equity) } of value in your second car. It is not exempt from collection.
+  
+  You may want to talk with a lawyer about protecting your property from collection. If you would like help finding free or low-cost legal services in your area, use [**Get Legal Help**](https://www.illinoislegalaid.org/get-legal-help).
+buttons:
+  - Exit: exit
+  - Restart: restart
+---
+id: not qualified too much equity both cars
+event: not_qualified_too_much_equity_both_cars
+question: |
+  Sorry
+subquestion: |
+  Based on your answers, there is ${ currency( car_equity + second_car_equity) } of value in your cars. This is not exempt from collection.
+  
+  You may want to talk with a lawyer about protecting your property from collection. If you would like help finding free or low-cost legal services in your area, use [**Get Legal Help**](https://www.illinoislegalaid.org/get-legal-help).
+buttons:
+  - Exit: exit
+  - Restart: restart
+---
+id: trade tools
+question: |
+  Professional books or trade tools
+subquestion: |
+  The law protects up to ${ currency(1500) } worth of professional books or trade tools. Examples include a set of reference books for teaching or a lawnmower for your landscaping business.
+  
+  Do you have any professional books or trade tools?
+fields:
+  - no label: has_tools
+    datatype: yesnoradio
+---
+id: trade tools value
+question: |
+  How much are your professional books or trade tools worth?
+fields:
+  - Value of professional or trade tools: value_tools
+    datatype: currency
+---
+id: personal property
+continue button field: personal_property_choices
+question: |
+  Money or other property
+subquestion: |
+  The law protects up to $4,000 worth of money or personal property from collection.
+  
+  Money you receive from an **{exempt}** source like Social Security does not count against the $4,000. This is true even if it is deposited in a bank account with other money.
+  
+  Which of these do you own? Check all that apply.
+fields:
+  - Money in cash or in a bank account: has_property_money
+    datatype: yesnowide
+  - Amount (do not include exempt income like Social Security): value_money
+    datatype: currency
+    show if: has_property_money
+  - Other property: has_property_other
+    datatype: yesnowide
+    help: |
+      Think about all of your belongings when you estimate the resale value of your other property.
+    
+      Other property could include:
+    
+        * Furniture,
+        * Appliances,
+        * Electronics,
+        * Jewelry, or
+        * Sports & hobby equipment.
+    
+      You do not need to include:
+    
+        * Neccesary clothing,
+        * Religious items,
+        * School books, or
+        * Family pictures.
+  - Estimate the resale value: value_other
+    datatype: currency
+    show if: has_property_other
+  - None of the above: property_none
+    datatype: yesnowide
+    uncheck others: True
+validation code: |
+  if not (has_property_money or has_property_other or property_none):
+    validation_error("You need to select at least one choice.", field="property_none")
+---
+# determines if cars are exempt
+code: |
+  # set wildcard exemption at 4000
+  wildcard_exemption = 4000
+  if owns_car == True:
+    if car_paid_off == False:
+      car_equity = car.value - car.loan
+    else:
+      car_equity = car.value
+    car_exemption = 2400 - car_equity
+    if car_exemption < 0:
+      # check if wildcard can be used to protect surplus car equity 
+      wildcard_exemption = 4000 - (car_equity - 2400)      
+      car_uses_wildcard = True
+      if wildcard_exemption < 0:
+        is_car_exempt = False
+      else:
+        is_car_exempt = True
+    else:
+      is_car_exempt = True
+      car_uses_wildcard = False
+        
+    if owns_second_car == True:
+      second_car_exemption = wildcard_exemption - second_car_equity
+      if second_car_exemption < 0:
+        is_second_car_exempt = False
+      else:
+        is_second_car_exempt = True
+reconsider: True
+---
+# determines if tools and other personal property is exempt
+code: |
+  if has_tools == True:
+    tools_exemption = 1500 - value_tools
+    if tools_exemption < 0:
+      wildcard_exemption = wildcard_exemption - (value_tools - 1500)
+
+  personal_property_value = sum_if_defined("value_money", "value_other") 
+
+  wildcard_exemption = wildcard_exemption - personal_property_value
+  if wildcard_exemption < 0:
+    # property is beyond exemption
+    property_exempt = False
+  else:
+    property_exempt = True
+reconsider: True
+---
+id: property qualified
+continue button field: property_qualified
+question: |
+  Good news!
+subquestion: |
+  Based on your answers, your personal property is **{exempt}** from collection.
+
+  The next screens will ask questions for information to put in your letter.
+---
+id: not qualified too much property
+event: not_qualified_too_much_property
+question: |
+  Sorry
+subquestion: |
+  Based on your answers, the value of your personal property is not **{exempt}**.
+
+  Learn more about [**money and property you can protect from a debt collector**](https://www.illinoislegalaid.org/node/31936). 
+
+  You may want to talk with a lawyer about protecting your property from collection. If you would like help finding free or low-cost legal services in your area, use [**Get Legal Help**](https://www.illinoislegalaid.org/get-legal-help).
+buttons:
+  - Exit: exit
+  - Restart: restart
+---
+id: debt collector name
+question: |
+  What is the name of the company that is trying to collect a debt?
+fields:
+  - Name of debt collector : debt_collector.name.first
+---
+id: debt collector address
+question: |
+  What is ${ debt_collector.possessive('address') }?
+fields:
+  - Street address: debt_collector.address.address
+    address autocomplete: True
+  - Address line 2: debt_collector.address.unit
+    required: False
+  - City: debt_collector.address.city
+  - State: debt_collector.address.state
+    code: |
+      states_list()   
+    default: IL   
+  - ZIP code: debt_collector.address.zip
+---
+id: account number
+question: |
+  What is your account number?
+subquestion: |
+  The account number could contain letters, numbers, or symbols.
+
+  ${ collapse_template(help_account_number) }  
+
+fields:
+  - Account number : account_number
+---
+template: help_account_number
+subject: |
+  **Where can I find my account number?**
+content: |  
+  Your account number should be listed on the collection notice or demand you received from ${ debt_collector.name.first }. It might be called your file or customer number.  
+---
+id: mail letter date
+question: |
+  When will you mail your letter?
+fields:
+  - Date : letter_date
+    datatype: date
+    default: ${ today().format("yyyy-MM-dd") }
+    min: ${ today().format("yyyy-MM-dd") }
+---
+id: forms assembling
+continue button field: forms_assembling
+question: |
+  Almost done
+subquestion: |
+  After you click **Next**, it may take a few moments to finish making your forms.
+  
+  ###### You do not need to refresh your screen. Hang in there!
+  
+  [NEWLINE]
+---
+id: get docs screen
+event: get_docs_screen
+#continue button field: get_docs_screen
+#reconsider: letter
+question: |
+  Download
+subquestion: |
+  Your forms are ready. View and download your forms below. Click **Make changes** to fix any mistakes.
+
+  After you get your letter, sign it, make a copy, and send it by **{Certified Mail}**.  
+
+  ${ action_button_html(url_action('review_answers'), label=':edit: Make changes', color='success', size="md") }
+
+  ${ al_user_bundle.download_list_html() }
+
+  [NEWLINE]
+
+  ${ al_user_bundle.send_button_html(show_editable_checkbox=False) }
+
+  Thank you for using ILAO Easy Forms!
+under: |
+  % if not user_logged_in():
+  [${fa_icon("sign-in-alt", color="#0079d0", size="sm")} Sign-in](${url_of('login', next=interview_url())}) or [create](${url_of('register', next=interview_url())}) an ILAO Easy Form account to save your progress (optional).
+  % endif 
+
+  [NEWLINE]
+  ${ action_button_html(interview_url(i="docassemble.ILAO:feedback.yml", easy_form_interview=ilao_easy_form_url, easy_form_title=ilao_easy_form_title, easy_form_page=current_context().question_id, easy_form_variable=current_context().variable, local=False,reset=1), label=':comment: Was this program helpful?', color="#181c36", size="md", new_window=True) }
+---
+objects:
+  - instructions: ALDocument.using(title="Instructions", filename="instructions", enabled=True, has_addendum=False)
+  - letter: ALDocument.using(title="Letter", filename="collection_proof_letter", enabled=True, has_addendum=False)
+---
+objects:
+  - al_user_bundle: ALDocumentBundle.using(elements=[instructions, letter], filename="debt_collector_letter.pdf", title="Download all forms")
+  - al_court_bundle: ALDocumentBundle.using(elements=[instructions, letter], filename="debt_collector_letter.pdf", title="Letter")
+---
+attachment:
+  name: Instructions
+  variable name: instructions[i]
+  filename: instructions
+  docx template file: debt_collector_letter_instructions.docx
+---
+attachment:
+  name: Debt collector letter
+  variable name: letter[i]
+  filename: debt_collector_letter
+  docx template file: debt_collector_letter.docx
+---
+generic object: ALDocumentBundle
+template: x.send_email_template
+subject: |
+  Debt collector letter
+content: |
+  Your forms are attached.
+  
+  Thanks for using ILAO Easy Forms!
+  
+  [Illinois Legal Aid Online](https://www.illinoislegalaid.org)
+---
+############### Review page
+---
+id: debt collector letter review screen
+event: review_answers
+question: |
+  Review screen
+subquestion: |
+  Edit your answers below.
+review: 
+  - Edit: has_employment_income
+    button: |
+      **Do you have a job?**:
+      ${ word(yesno(has_employment_income)) }
+  - Edit: paycheck_amount
+    button: |
+      **How much do you get paid?**:
+      ${ currency(paycheck_amount) }
+  - Edit: paycheck_frequency
+    button: |
+      **How often do you get paid?**:
+      ${ paycheck_frequency }
+  - Edit: income_ssrb
+    button: |
+      **Do you receive Social Security retirement benefits?**:
+      ${ word(yesno(income_ssrb)) }
+  - Edit: income_ssi
+    button: |
+      **Do you receive Supplemental Security Income (SSI)?**:
+      ${ word(yesno(income_ssi)) }
+  - Edit: income_ssdi
+    button: |
+      **Do you receive Supplemental Security Disability Insurance (SSDI)?**:
+      ${ word(yesno(income_ssdi)) }
+  - Edit: income_public_aid
+    button: |
+      **Do you receive Public assistance like SNAP (foodstamps), TANF (welfare), or GA (General Assistance)?**:
+      ${ word(yesno(income_public_aid)) }
+  - Edit: income_va
+    button: |
+      **Do you receive Veteran's Benefits?**:
+      ${ word(yesno(income_va)) }
+  - Edit: income_pension
+    button: |
+      **Do you receive income from a pension?**:
+      ${ word(yesno(income_pension)) }
+  - Edit: owns_home
+    button: |
+      **Do you own a home?**:
+      ${ word(yesno(owns_home)) }
+  - Edit: lives_in_home
+    button: |
+      **Do you live in the property you own?**:
+      ${ word(yesno(lives_in_home)) }
+  - Edit: is_married
+    button: |
+      **Are you married?**:
+      ${ word(yesno(is_married)) }
+  - Edit: owns_with_spouse
+    button: |
+      **Do you own the property with your spouse?**:
+      ${ word(yesno(owns_with_spouse)) }
+  - Edit: home_value
+    button: |
+      **What is the value of your home?**:
+      ${ currency(home_value) }
+  - Edit: has_mortgage
+    button: |
+      **Do you have a mortgage on your property?**:
+      ${ word(yesno(has_mortgage)) }
+  - Edit: mortgage_remaining
+    button: |
+      **How much of the mortgage do you still have to repay?**:
+      ${ currency(mortgage_remaining) }
+  - Edit: has_other_home_loans
+    button: |
+      **Do you have other loans or liens on your home?**:
+      ${ word(yesno(has_other_home_loans)) }
+  - Edit: other_home_loans_remaining
+    button: |
+      **What is the total amount you owe on these other home loans or liens?**:
+      ${ currency(other_home_loans_remaining) }
+  - Edit: owns_car
+    button: |
+      **Do you own a car?**:
+      ${ word(yesno(owns_car)) }
+  - Edit: car.value
+    button: |
+      **What is the resale value of your car?**:
+      ${ currency(car.value) }
+  - Edit: car_paid_off
+    button: |
+      **Have you fully paid for your car?**:
+      ${ word(yesno(car_paid_off)) }
+  - Edit: car.loan
+    button: |
+      **How much do you owe on your car?**:
+      ${ currency(car.loan) }
+  - Edit: owns_second_car
+    button: |
+      **Do you own a second car?**:
+      ${ word(yesno(owns_second_car)) }
+  - Edit: second_car.value
+    button: |
+      **What is the resale value of your second car?**:
+      ${ currency(second_car.value) }
+  - Edit: second_car_paid_off
+    button: |
+      **Have you fully paid for your second car?**:
+      ${ word(yesno(second_car_paid_off)) }
+  - Edit: second_car.loan
+    button: |
+      **How much do you owe on your second car?**:
+      ${ currency(second_car.loan) }
+  - Edit: has_tools
+    button: |
+      **Do you have any professional books or trade tools?**:
+      ${ word(yesno(has_tools)) }
+  - Edit: value_tools
+    button: |
+      **How much are your professional books or trade tools worth?**:
+      ${ currency(value_tools) }
+  - Edit: has_property_money
+    button: |
+      **Do you have money in cash or in a bank account?**:
+      ${ word(yesno(has_property_money)) }
+  - Edit: value_money
+    button: |
+      **Amount of money or cash (not including exempt income)**:
+      ${ currency(value_money) }
+  - Edit: has_property_other
+    button: |
+      **Do you own other things (not including necessary items)?**:
+      ${ word(yesno(has_property_other)) }
+  - Edit: value_other
+    button: |
+      **Resale value of your other things**:
+      ${ currency(value_other) }
+  - Edit: user.name.first
+    button: |
+      **What is your name?**:
+      ${ user.name.full(middle="full") }
+  - Edit: user.address.address
+    button: |
+      **What is your address?**:
+      ${ user.address.on_one_line() }
+  - Edit: debt_collector.name
+    button: |
+      **What is the debt collector's name?**:
+      ${ debt_collector.name }
+  - Edit: debt_collector.address.address
+    button: |
+      **What is the debt collector's address?**:
+      ${ debt_collector.address.on_one_line() }
+  - Edit: account_number
+    button: |
+      **What is your account number?**:
+      ${ account_number }
+  - Edit: letter_date
+    button: |
+      **When will you mail your letter?**:
+      ${ format_date(letter_date) }
+---
+id: income review screen
+section: Income details
+event: section_income
+question: |
+  Income details
+subquestion: |
+  Edit your answers below.
+review:
+  - Edit: has_employment_income
+    button: |
+      **Do you have a job?**:
+      ${ word(yesno(has_employment_income)) }
+  - Edit: paycheck_amount
+    button: |
+      **How much do you get paid?**:
+      ${ currency(paycheck_amount) }
+  - Edit: paycheck_frequency
+    button: |
+      **How often do you get paid?**:
+      ${ paycheck_frequency }
+  - Edit: income_ssrb
+    button: |
+      **Do you receive Social Security retirement benefits?**:
+      ${ word(yesno(income_ssrb)) }
+  - Edit: income_ssi
+    button: |
+      **Do you receive Supplemental Security Income (SSI)?**:
+      ${ word(yesno(income_ssi)) }
+  - Edit: income_ssdi
+    button: |
+      **Do you receive Supplemental Security Disability Insurance (SSDI)?**:
+      ${ word(yesno(income_ssdi)) }
+  - Edit: income_public_aid
+    button: |
+      **Do you receive Public assistance like SNAP (foodstamps), TANF (welfare), or GA (General Assistance)?**:
+      ${ word(yesno(income_public_aid)) }
+  - Edit: income_va
+    button: |
+      **Do you receive Veteran's Benefits?**:
+      ${ word(yesno(income_va)) }
+  - Edit: income_pension
+    button: |
+      **Do you receive income from a pension?**:
+      ${ word(yesno(income_pension)) }  
+---  
+id: property review screen
+section: Property details
+event: section_property
+question: |
+  Property details
+subquestion: |
+  Edit your answers below.
+review:
+  - Edit: owns_home
+    button: |
+      **Do you own a home?**:
+      ${ word(yesno(owns_home)) }
+  - Edit: lives_in_home
+    button: |
+      **Do you live in the property you own?**:
+      ${ word(yesno(lives_in_home)) }
+  - Edit: is_married
+    button: |
+      **Are you married?**:
+      ${ word(yesno(is_married)) }
+  - Edit: owns_with_spouse
+    button: |
+      **Do you own the property with your spouse?**:
+      ${ word(yesno(owns_with_spouse)) }
+  - Edit: home_value
+    button: |
+      **What is the value of your home?**:
+      ${ currency(home_value) }
+  - Edit: has_mortgage
+    button: |
+      **Do you have a mortgage on your property?**:
+      ${ word(yesno(has_mortgage)) }
+  - Edit: mortgage_remaining
+    button: |
+      **How much of the mortgage do you still have to repay?**:
+      ${ currency(mortgage_remaining) }
+  - Edit: has_other_home_loans
+    button: |
+      **Do you have other loans or liens on your home?**:
+      ${ word(yesno(has_other_home_loans)) }
+  - Edit: other_home_loans_remaining
+    button: |
+      **What is the total amount you owe on these other home loans or liens?**:
+      ${ currency(other_home_loans_remaining) }
+  - Edit: owns_car
+    button: |
+      **Do you own a car?**:
+      ${ word(yesno(owns_car)) }
+  - Edit: car.value
+    button: |
+      **What is the resale value of your car?**:
+      ${ currency(car.value) }
+  - Edit: car_paid_off
+    button: |
+      **Have you fully paid for your car?**:
+      ${ word(yesno(car_paid_off)) }
+  - Edit: car.loan
+    button: |
+      **How much do you owe on your car?**:
+      ${ currency(car.loan) }
+  - Edit: owns_second_car
+    button: |
+      **Do you own a second car?**:
+      ${ word(yesno(owns_second_car)) }
+  - Edit: second_car.value
+    button: |
+      **What is the resale value of your second car?**:
+      ${ currency(second_car.value) }
+  - Edit: second_car_paid_off
+    button: |
+      **Have you fully paid for your second car?**:
+      ${ word(yesno(second_car_paid_off)) }
+  - Edit: second_car.loan
+    button: |
+      **How much do you owe on your second car?**:
+      ${ currency(second_car.loan) }
+  - Edit: has_tools
+    button: |
+      **Do you have any professional books or trade tools?**:
+      ${ word(yesno(has_tools)) }
+  - Edit: value_tools
+    button: |
+      **How much are your professional books or trade tools worth?**:
+      ${ currency(value_tools) }
+  - Edit: has_property_money
+    button: |
+      **Do you have money in cash or in a bank account?**:
+      ${ word(yesno(has_property_money)) }
+  - Edit: value_money
+    button: |
+      **Amount of money or cash (not including exempt income)**:
+      ${ currency(value_money) }
+  - Edit: has_property_other
+    button: |
+      **Do you own other things (not including necessary items)?**:
+      ${ word(yesno(has_property_other)) }
+  - Edit: value_other
+    button: |
+      **Resale value of your other things**:
+      ${ currency(value_other) }  
+  
+---  
+id: about you and letter info review screen
+section: About you and letter info
+event: section_about_you
+question: |
+  About you and letter info
+subquestion: |
+  Edit your answers below.
+review:
+  - Edit: user.name.first
+    button: |
+      **What is your name?**:
+      ${ user.name.full(middle="full") }
+  - Edit: user.address.address
+    button: |
+      **What is your address?**:
+      ${ user.address.on_one_line() }
+  - Edit: debt_collector.name
+    button: |
+      **What is the debt collector's name?**:
+      ${ debt_collector.name }
+  - Edit: debt_collector.address.address
+    button: |
+      **What is the debt collector's address?**:
+      ${ debt_collector.address.on_one_line() }
+  - Edit: account_number
+    button: |
+      **What is your account number?**:
+      ${ account_number }
+  - Edit: letter_date
+    button: |
+      **When will you mail your letter?**:
+      ${ format_date(letter_date) }
