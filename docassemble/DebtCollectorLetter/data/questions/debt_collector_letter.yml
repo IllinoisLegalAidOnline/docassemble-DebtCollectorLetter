@@ -26,10 +26,9 @@ code: |
 # Road map
 sections:
   - section_intro: Start
-  - section_debt: Debt collector info    
-  - section_income: Income details
-  - section_property: Property details
-  - section_about_you: About you and letter info
+  - section_debt: Debt info    
+  - section_calculator: Collection proof calculator (optional)
+  - section_about_you: About you
   - section_download: Download
 ---
 # interview order block
@@ -47,69 +46,69 @@ code: |
   sued_by_debt_collector
   if debt_collector_contact == False:
     not_qualified_no_contact
-  nav.set_section('section_income')
   debt_collector.name.first
   account_number
   debt_collector.address.address
-  able_to_pay
+  # able_to_pay
   validate_debt
   dispute_debt
   contact_prefs
   
-  set_progress(10)
-  has_employment_income
-  if has_employment_income == True:
-    employment_income_amount  
-    if employment_income_exempt == False:
-      not_qualified_over_income_limit  
-  exempt_income_choices
-  income_qualified
-  
-  set_progress(20)
-  nav.set_section('section_property')
-  owns_home
-  if owns_home == True:
-    if lives_in_home == False:
-      not_qualified_secondary_property
+  set_progress(15)
+  nav.set_section('calculator')
+  if collection_proof_check == "Yes":
+    has_employment_income
+    if has_employment_income == True:
+      employment_income_amount  
+      if employment_income_exempt == False:
+        not_qualified_over_income_limit  
+    exempt_income_choices
+    income_qualified
+    
+    set_progress(20)
+    owns_home
     if owns_home == True:
-      if is_married == True:
-        owns_with_spouse
-      home_value
-      if has_mortgage:
-        mortgage_remaining
-      if has_other_home_loans:
-        other_home_loans_remaining
-      if home_equity_exempt:
-        home_qualified
-      else: 
-        not_qualified_too_much_home_equity
-  
-  set_progress(40)
-  if owns_car == True:
-    car.value
-    if car_paid_off == False:
-      car.loan
-    if is_car_exempt == False:
-      not_qualified_too_much_car_equity      
-    if owns_second_car == True:
-      second_car.value
-      if second_car_paid_off == False:
-        second_car.loan
-      if car_uses_wildcard == True:
-        if is_second_car_exempt == False:
-          not_qualified_too_much_equity_both_cars      
-      else: 
-        if is_second_car_exempt == False:
-          not_qualified_too_much_second_car_equity
-  
-  set_progress(60)
-  if has_tools == True:
-    value_tools
-  personal_property_choices
-  if property_exempt == False:
-    not_qualified_too_much_property
-  else: 
-    property_qualified
+      if lives_in_home == False:
+        not_qualified_secondary_property
+      if owns_home == True:
+        if is_married == True:
+          owns_with_spouse
+        home_value
+        if has_mortgage:
+          mortgage_remaining
+        if has_other_home_loans:
+          other_home_loans_remaining
+        if home_equity_exempt:
+          home_qualified
+        else: 
+          not_qualified_too_much_home_equity
+    
+    set_progress(40)
+    if owns_car == True:
+      car.value
+      if car_paid_off == False:
+        car.loan
+      if is_car_exempt == False:
+        not_qualified_too_much_car_equity      
+      if owns_second_car == True:
+        second_car.value
+        if second_car_paid_off == False:
+          second_car.loan
+        if car_uses_wildcard == True:
+          if is_second_car_exempt == False:
+            not_qualified_too_much_equity_both_cars      
+        else: 
+          if is_second_car_exempt == False:
+            not_qualified_too_much_second_car_equity
+    
+    set_progress(60)
+    if has_tools == True:
+      value_tools
+    personal_property_choices
+    if property_exempt == False:
+      not_qualified_too_much_property
+    else: 
+      property_qualified
   
   set_progress(75)
   nav.set_section('section_about_you')
@@ -345,6 +344,25 @@ fields:
     code: |
       name_suffix()
     required: False
+---
+id: collection proof check
+question: |
+  Do you want to check if you are collection proof?
+subquestion: |
+  Creditors can only take your money or property if your income or belongings are above a certain amount. If they aren't, you may be collection proof (also called "judgment proof"). This means creditors cannot garnish your wages or seize your assets, even if they sue you and get a judgment against you.
+
+  ADD COLLAPSE TEMPLATE with short def of typical collection proof criteria.
+
+  Telling creditors that you are collection proof might make them slow down their demands for payment. However, if do you have income or property that can be collected, now or in the future, they might try again.
+  
+  If you already know whether you are collection proof, you can skip this step. Otherwise, we can help you determine if you qualify.
+fields:
+  - no label: collection_proof_check
+    datatype: radio
+    choices:
+      - Yes. I want to answer a few more questions to see if I am collection proof.: Yes
+      - I already know that I am collection proof so I do not need to check. (Skip calculator and **include collection proof language** in my letter.): already
+      - I know that I have too much income or own too much property to be collection proof. I don't want to include this in my letter. (Skip calculator and **do not include collection proof language** in my letter.): skip
 ---
 id: has job
 question: |
@@ -1009,6 +1027,18 @@ question: |
 subquestion: |
   Edit your answers below.
 review: 
+  - Edit: debt_collector.name
+    button: |
+      **What is the debt collector's name?**:
+      ${ debt_collector.name }
+  - Edit: debt_collector.address.address
+    button: |
+      **What is the debt collector's address?**:
+      ${ debt_collector.address.on_one_line() }
+  - Edit: account_number
+    button: |
+      **What is your account number?**:
+      ${ account_number }
   - Edit: has_employment_income
     button: |
       **Do you have a job?**:
@@ -1145,6 +1175,19 @@ review:
     button: |
       **What is your address?**:
       ${ user.address.on_one_line() }
+  - Edit: letter_date
+    button: |
+      **When will you mail your letter?**:
+      ${ format_date(letter_date) }
+---
+id: debt info review screen
+section: Debt info
+event: section_debt
+question: |
+  Debt details
+subquestion: |
+  Edit your answers below.
+review:
   - Edit: debt_collector.name
     button: |
       **What is the debt collector's name?**:
@@ -1157,16 +1200,15 @@ review:
     button: |
       **What is your account number?**:
       ${ account_number }
-  - Edit: letter_date
-    button: |
-      **When will you mail your letter?**:
-      ${ format_date(letter_date) }
+
+
+
 ---
-id: income review screen
-section: Income details
-event: section_income
+id: calculator review screen
+section: Collection proof calculator (optional)
+event: section_calculator
 question: |
-  Income details
+  Collection proof details
 subquestion: |
   Edit your answers below.
 review:
@@ -1206,15 +1248,6 @@ review:
     button: |
       **Do you receive income from a pension?**:
       ${ word(yesno(income_pension)) }  
----  
-id: property review screen
-section: Property details
-event: section_property
-question: |
-  Property details
-subquestion: |
-  Edit your answers below.
-review:
   - Edit: owns_home
     button: |
       **Do you own a home?**:
@@ -1309,11 +1342,11 @@ review:
       ${ currency(value_other) }  
   
 ---  
-id: about you and letter info review screen
-section: About you and letter info
+id: about you review screen
+section: About you
 event: section_about_you
 question: |
-  About you and letter info
+  About you
 subquestion: |
   Edit your answers below.
 review:
@@ -1325,18 +1358,6 @@ review:
     button: |
       **What is your address?**:
       ${ user.address.on_one_line() }
-  - Edit: debt_collector.name
-    button: |
-      **What is the debt collector's name?**:
-      ${ debt_collector.name }
-  - Edit: debt_collector.address.address
-    button: |
-      **What is the debt collector's address?**:
-      ${ debt_collector.address.on_one_line() }
-  - Edit: account_number
-    button: |
-      **What is your account number?**:
-      ${ account_number }
   - Edit: letter_date
     button: |
       **When will you mail your letter?**:
