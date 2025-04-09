@@ -55,61 +55,72 @@ code: |
   contact_prefs
   
   set_progress(15)
-  nav.set_section('calculator')
+  nav.set_section('section_calculator')
   collection_proof_explainer
   if collection_proof_check == "Yes":
     has_employment_income
     if has_employment_income == True:
       employment_income_amount  
-      if employment_income_exempt == False:
-        not_qualified_over_income_limit  
-    exempt_income_choices
-    income_qualified
-    
-    set_progress(20)
-    owns_home
-    if owns_home == True:
-      if lives_in_home == False:
-        not_qualified_secondary_property
+    else:
+      exempt_income_choices
+    if employment_income_exempt == False:
+      not_qualified_over_income_limit  
+    else:  
+      income_qualified
+
+    # only ask about home if income is exempt
+    if income_qualified:
+      set_progress(20)
+      owns_home
       if owns_home == True:
-        if is_married == True:
-          owns_with_spouse
-        home_value
-        if has_mortgage:
-          mortgage_remaining
-        if has_other_home_loans:
-          other_home_loans_remaining
-        if home_equity_exempt:
-          home_qualified
-        else: 
-          not_qualified_too_much_home_equity
-    
-    set_progress(40)
-    if owns_car == True:
-      car.value
-      if car_paid_off == False:
-        car.loan
-      if is_car_exempt == False:
-        not_qualified_too_much_car_equity      
-      if owns_second_car == True:
-        second_car.value
-        if second_car_paid_off == False:
-          second_car.loan
-        if car_uses_wildcard == True:
-          if is_second_car_exempt == False:
-            not_qualified_too_much_equity_both_cars      
-        else: 
-          if is_second_car_exempt == False:
-            not_qualified_too_much_second_car_equity
-    
-    set_progress(60)
-    if has_tools == True:
-      value_tools
-    personal_property_choices
-    if property_exempt == False:
-      not_qualified_too_much_property
-    else: 
-      property_qualified
+        if lives_in_home == False:
+          not_qualified_secondary_property
+        else:
+          if owns_home == True:
+            if is_married == True:
+              owns_with_spouse
+            home_value
+            if has_mortgage:
+              mortgage_remaining
+            if has_other_home_loans:
+              other_home_loans_remaining
+            if home_equity_exempt:
+              home_qualified
+            else: 
+              not_qualified_too_much_home_equity
+
+    # only ask about cars if income and home are exempt
+    if income_qualified and home_equity_exempt:
+      set_progress(40)
+      if owns_car == True:
+        car.value
+        if car_paid_off == False:
+          car.loan
+        if is_car_exempt == False:
+          not_qualified_too_much_car_equity
+        else:
+          if owns_second_car == True:
+            second_car.value
+            if second_car_paid_off == False:
+              second_car.loan
+            if car_uses_wildcard == True:
+              if is_second_car_exempt == False:
+                not_qualified_too_much_equity_both_cars      
+            else: 
+              if is_second_car_exempt == False:
+                not_qualified_too_much_second_car_equity
+
+    # only ask tools and personal property if income, home, and car are exempt
+    if income_qualified and home_equity_exempt:
+      if owns_car:
+        if is_car_exempt:
+          if owns_second_car:
+            if is_second_car_exempt:
+              property_questions
+          else:
+            property_questions
+      else:
+        property_questions
   
   set_progress(75)
   nav.set_section('section_about_you')
@@ -124,6 +135,20 @@ code: |
   forms_assembling
   snapshot_forms
   get_docs_screen
+---
+# interview order for property questions asked if eligible
+reconsider: True
+code: |
+  set_progress(60)
+  has_tools
+  personal_property_choices
+  if property_exempt == False:
+    not_qualified_too_much_property
+  else: 
+    property_qualified  
+
+  property_questions = True
+
 ---
 code: |
   stuff_to_snapshot = {
@@ -258,7 +283,7 @@ fields:
     choices:
       - I want ${ debt_collector } to stop all contact with me.: stop
       - I want ${ debt_collector } to contact me only at the ways and times I specify. (You can explain below.): ways
-  - Contact about the debt is okay in these ways:: acceptable_contact
+  - Contact about the debt is okay in these ways and times:: acceptable_contact
     datatype: area
     maxlength: 150
     rows: 4
@@ -439,23 +464,26 @@ fields:
       - Every month: Monthly
 ---
 # determines if income is exempt
+reconsider: True
 code: |
-  if paycheck_frequency == "Weekly":
-    weekly_income = paycheck_amount
-  else:
-    if paycheck_frequency == "Every other week":
-      weekly_income = paycheck_amount / 2
-    else:
-      if paycheck_frequency == "Twice per month":
-        weekly_income = paycheck_amount * 24 / 52
-      else:
-        weekly_income = paycheck_amount * 12 / 52
-
-  if weekly_income <= 675:
+  if has_employment_income == False:
     employment_income_exempt = True
   else:
-    employment_income_exempt = False
-reconsider: True
+    if paycheck_frequency == "Weekly":
+      weekly_income = paycheck_amount
+    else:
+      if paycheck_frequency == "Every other week":
+        weekly_income = paycheck_amount / 2
+      else:
+        if paycheck_frequency == "Twice per month":
+          weekly_income = paycheck_amount * 24 / 52
+        else:
+          weekly_income = paycheck_amount * 12 / 52
+    if weekly_income <= 675:
+      employment_income_exempt = True
+    else:
+      employment_income_exempt = False
+
 ---
 id: exempt income
 continue button field: exempt_income_choices
@@ -504,18 +532,15 @@ content: |
   * Cash awarded as victim of crime
 ---
 id: not qualified over income limit
-event: not_qualified_over_income_limit  
+continue button field: not_qualified_over_income_limit  
 question: |
-  Sorry
+  Employment income not exempt
 subquestion: |
   You make ${ currency(weekly_income) } per week.
   
-  If you make over $675.00 per week, your income is not protected.
+  If you make over $675.00 per week, your income is not protected. Your letter will not state that you are collection proof, but it can still tell the creditor if you dispute the debt, want to validate the debt, or want them to stop contacting you. 
   
-  You may be able to pay the debt over time instead of having your wages garnished. Learn about [**coming up with a payment plan**](https://www.illinoislegalaid.org/node/31416).
-buttons:
-  - Exit: exit
-  - Restart: restart
+  Click **Next** to continue making your letter.
 ---
 id: income exempt
 continue button field: income_qualified
@@ -526,6 +551,8 @@ subquestion: |
 
   The next questions will ask about your belongings. Some things you own might not be exempt. 
 ---
+# not being used in letter at the moment 4.9.25 but might change
+reconsider: True
 sets:
   - income_sources
 code: |
@@ -545,7 +572,6 @@ code: |
     income_sources.append("wages amounting to less than $675.00 per week after state and federal taxes")
   income_sources.there_are_any = True
   income_sources.there_is_another = False
-reconsider: True
 ---
 id: owns home
 question: |
@@ -565,14 +591,17 @@ fields:
     datatype: yesnoradio
 ---
 id: not qualified owns secondary property
-event: not_qualified_secondary_property
+continue button field: not_qualified_secondary_property
 question: |
-  Sorry
+  Non-residential home not exempt
 subquestion: |
   If you own a home or condominium that is not where you live, that property is not **{exempt}**.
-buttons:
-  - Exit: exit
-  - Restart: restart
+
+  You may want to talk with a lawyer about protecting your home from collection. If you would like help finding free or low-cost legal services in your area, use [**Get Legal Help**](https://www.illinoislegalaid.org/get-legal-help).
+  
+  Your letter will not state that you are collection proof, but it can still tell the creditor if you dispute the debt, want to validate the debt, or want them to stop contacting you. 
+  
+  Click **Next** to continue making your letter.
 ---
 id: married
 question: |
@@ -591,18 +620,19 @@ fields:
     datatype: yesnoradio
 ---
 id: not qualified too much home equity
-event: not_qualified_too_much_home_equity
+continue button field: not_qualified_too_much_home_equity
 question: |
-  Sorry
+  Too much home equity
 subquestion: |
   Up to ${ currency(homestead_exemption) } equity in your home is protected by law. This is called the Homestead Exemption.
   
   Beyond the **{exempt}** amount, there is ${ currency(home_equity - homestead_exemption) } of equity in your home.
   
   You may want to talk with a lawyer about protecting your home from collection. If you would like help finding free or low-cost legal services in your area, use [**Get Legal Help**](https://www.illinoislegalaid.org/get-legal-help).
-buttons:
-  - Exit: exit
-  - Restart: restart
+  
+  Your letter will not state that you are collection proof, but it can still tell the creditor if you dispute the debt, want to validate the debt, or want them to stop contacting you. 
+  
+  Click **Next** to continue making your letter.
 ---
 id: home value
 question: |
@@ -665,21 +695,26 @@ code: |
 depends on: has_other_home_loans
 ---
 # determines if equity in home is exempt
+reconsider: True
 code: |
   if owns_home == True:
-    if is_married == True:
-      if owns_with_spouse == True:
-        homestead_exemption = 30000
-      else:
-        homestead_exemption = 15000
-    else:
-      homestead_exemption = 15000
-    home_equity = home_value - mortgage_remaining - other_home_loans_remaining
-    if home_equity > homestead_exemption:
+    if lives_in_home == False:
       home_equity_exempt = False
     else:
-      home_equity_exempt = True
-reconsider: True
+      if is_married == True:
+        if owns_with_spouse == True:
+          homestead_exemption = 30000
+        else:
+          homestead_exemption = 15000
+      else:
+        homestead_exemption = 15000
+      home_equity = home_value - mortgage_remaining - other_home_loans_remaining
+      if home_equity > homestead_exemption:
+        home_equity_exempt = False
+      else:
+        home_equity_exempt = True
+  else:
+    home_equity_exempt = True
 ---
 id: home qualified
 continue button field: home_qualified
@@ -736,9 +771,9 @@ fields:
     datatype: yesnoradio
 ---
 id: not qualified too much car equity
-event: not_qualified_too_much_car_equity
+continue button field: not_qualified_too_much_car_equity
 question: |
-  Sorry
+  Too much equity in your car
 subquestion: |
   Your car is **{exempt}** from collection if it is worth less than ${ currency(2400) }, minus what you still owe.
   
@@ -747,9 +782,10 @@ subquestion: |
   Based on your answers, there is ${ currency(car_equity) } of value in your car. Your car is not exempt from collection.
   
   You may want to talk with a lawyer about protecting your property from collection. If you would like help finding free or low-cost legal services in your area, use [**Get Legal Help**](https://www.illinoislegalaid.org/get-legal-help).
-buttons:
-  - Exit: exit
-  - Restart: restart
+  
+  Your letter will not state that you are collection proof, but it can still tell the creditor if you dispute the debt, want to validate the debt, or want them to stop contacting you. 
+  
+  Click **Next** to continue making your letter.
 ---
 id: second car value
 question: |
@@ -792,30 +828,32 @@ depends on:
   - second_car.loan
 ---
 id: not qualified too much second car equity
-event: not_qualified_too_much_second_car_equity
+continue button field: not_qualified_too_much_second_car_equity
 question: |
-  Sorry
+  Too much equity in your second car
 subquestion: |
   If you have more than one car, your second car is usually **{exempt}** from collection if it is worth less than ${ currency(4000) }, minus what you still owe.
 
   Based on your answers, there is ${ currency(second_car_equity) } of value in your second car. It is not exempt from collection.
   
   You may want to talk with a lawyer about protecting your property from collection. If you would like help finding free or low-cost legal services in your area, use [**Get Legal Help**](https://www.illinoislegalaid.org/get-legal-help).
-buttons:
-  - Exit: exit
-  - Restart: restart
+
+  Your letter will not state that you are collection proof, but it can still tell the creditor if you dispute the debt, want to validate the debt, or want them to stop contacting you. 
+  
+  Click **Next** to continue making your letter.
 ---
 id: not qualified too much equity both cars
-event: not_qualified_too_much_equity_both_cars
+continue button field: not_qualified_too_much_equity_both_cars
 question: |
-  Sorry
+  Too much equity in both cars
 subquestion: |
   Based on your answers, there is ${ currency( car_equity + second_car_equity) } of value in your cars. This is not exempt from collection.
   
   You may want to talk with a lawyer about protecting your property from collection. If you would like help finding free or low-cost legal services in your area, use [**Get Legal Help**](https://www.illinoislegalaid.org/get-legal-help).
-buttons:
-  - Exit: exit
-  - Restart: restart
+
+  Your letter will not state that you are collection proof, but it can still tell the creditor if you dispute the debt, want to validate the debt, or want them to stop contacting you. 
+  
+  Click **Next** to continue making your letter.
 ---
 id: trade tools
 question: |
@@ -827,13 +865,9 @@ subquestion: |
 fields:
   - no label: has_tools
     datatype: yesnoradio
----
-id: trade tools value
-question: |
-  How much are your professional books or trade tools worth?
-fields:
   - Value of professional or trade tools: value_tools
     datatype: currency
+    show if: has_tools
 ---
 id: personal property
 continue button field: personal_property_choices
@@ -881,6 +915,7 @@ validation code: |
     validation_error("You need to select at least one choice.", field="property_none")
 ---
 # determines if cars are exempt
+reconsider: True
 code: |
   # set wildcard exemption at 4000
   wildcard_exemption = 4000
@@ -902,13 +937,13 @@ code: |
       is_car_exempt = True
       car_uses_wildcard = False
         
-    if owns_second_car == True:
-      second_car_exemption = wildcard_exemption - second_car_equity
-      if second_car_exemption < 0:
-        is_second_car_exempt = False
-      else:
-        is_second_car_exempt = True
-reconsider: True
+    if is_car_exempt:
+      if owns_second_car == True:
+        second_car_exemption = wildcard_exemption - second_car_equity
+        if second_car_exemption < 0:
+          is_second_car_exempt = False
+        else:
+          is_second_car_exempt = True
 ---
 # determines if tools and other personal property is exempt
 code: |
@@ -937,18 +972,19 @@ subquestion: |
   The next screens will ask questions for information to put in your letter.
 ---
 id: not qualified too much property
-event: not_qualified_too_much_property
+continue button field: not_qualified_too_much_property
 question: |
-  Sorry
+  Too much personal property
 subquestion: |
   Based on your answers, the value of your personal property is not **{exempt}**.
 
   Learn more about [**money and property you can protect from a debt collector**](https://www.illinoislegalaid.org/node/31936). 
 
   You may want to talk with a lawyer about protecting your property from collection. If you would like help finding free or low-cost legal services in your area, use [**Get Legal Help**](https://www.illinoislegalaid.org/get-legal-help).
-buttons:
-  - Exit: exit
-  - Restart: restart
+
+  Your letter will not state that you are collection proof, but it can still tell the creditor if you dispute the debt, want to validate the debt, or want them to stop contacting you. 
+  
+  Click **Next** to continue making your letter.
 ---
 id: debt collector name
 question: |
@@ -991,6 +1027,8 @@ content: |
 id: mail letter date
 question: |
   When will you mail your letter?
+subquestion: |
+  This date will be printed on the letter.
 fields:
   - Date : letter_date
     datatype: date
@@ -1078,155 +1116,220 @@ subquestion: |
 review: 
   - Edit: debt_collector.name
     button: |
-      **What is the debt collector's name?**:
+      **What is the debt collector's name?**
       ${ debt_collector.name }
   - Edit: debt_collector.address.address
     button: |
-      **What is the debt collector's address?**:
+      **What is the debt collector's address?**
       ${ debt_collector.address.on_one_line() }
   - Edit: account_number
     button: |
-      **What is your account number?**:
+      **What is your account number?**
       ${ account_number }
+      
+  - Edit: validate_debt
+    button: |
+      **Do you want ${ debt_collector } to validate the debt?**
+      ${ word(yesno(validate_debt)) }
+  - Edit: dispute_debt
+    button: |
+      **Do you dispute the debt that ${ debt_collector } says you owe?**
+      ${ word(yesno(dispute_debt)) }
+  - Edit: reason_for_dispute
+    button: |
+      **Why do you dispute this debt?**
+      ${ reason_for_dispute }
+    show if: dispute_debt
+  - Edit: contact_prefs
+    button: |
+      **How do you want ${ debt_collector } to contact you about the debt?**
+      % if contact_prefs == "stop":
+      Stop all contact.
+      % else:
+      Contact me only at the ways and times I specify.
+      % endif
+  - Edit: acceptable_contact
+    button: |
+      **Contact is okay in these ways and times:**
+      ${ acceptable_contact }
+    show if: contact_prefs == "ways"
+
+  - Edit: collection_proof_check
+    button: |
+      **Do you want to check if you are collection proof?**
+      % if collection_proof_check == "Yes":
+      Yes. I want to answer questions now.
+      % elif collection_proof_check == "already":
+      I already know that I am collection proof so I do not need to check.
+      % else:
+      I know that I am not collection proof.
+      % endif
+      
   - Edit: has_employment_income
     button: |
-      **Do you have a job?**:
+      **Do you have a job?**
       ${ word(yesno(has_employment_income)) }
   - Edit: paycheck_amount
     button: |
-      **How much do you get paid?**:
+      **How much do you get paid?**
       ${ currency(paycheck_amount) }
+    show if: has_employment_income
   - Edit: paycheck_frequency
     button: |
-      **How often do you get paid?**:
+      **How often do you get paid?**
       ${ paycheck_frequency }
-  - Edit: income_ssrb
+    show if: has_employment_income
+  - Edit: income_none
     button: |
-      **Do you receive Social Security retirement benefits?**:
-      ${ word(yesno(income_ssrb)) }
-  - Edit: income_ssi
-    button: |
-      **Do you receive Supplemental Security Income (SSI)?**:
-      ${ word(yesno(income_ssi)) }
-  - Edit: income_ssdi
-    button: |
-      **Do you receive Supplemental Security Disability Insurance (SSDI)?**:
-      ${ word(yesno(income_ssdi)) }
-  - Edit: income_public_aid
-    button: |
-      **Do you receive Public assistance like SNAP (foodstamps), TANF (welfare), or GA (General Assistance)?**:
-      ${ word(yesno(income_public_aid)) }
-  - Edit: income_va
-    button: |
-      **Do you receive Veteran's Benefits?**:
-      ${ word(yesno(income_va)) }
-  - Edit: income_pension
-    button: |
-      **Do you receive income from a pension?**:
-      ${ word(yesno(income_pension)) }
+      **Exempt income you receive:**
+	  
+      % if income_ssrb:
+      * Social Security retirement benefit
+      % endif
+      % if income_ssi:
+      * Supplemental Security Income (SSI)
+      % endif
+      % if income_ssdi:
+      * Supplemental Security Disability Insurance (SSDI)
+      % endif
+      % if income_public_aid:
+      * Public assistance like SNAP (foodstamps), TANF (welfare), or GA (General Assistance)
+      % endif
+      % if income_va:
+      * Veteran's Benefits
+      % endif
+      % if income_pension:
+      * Income from a pension
+      % endif
+      % if income_none:
+      * None
+      % endif
+    show if: has_employment_income == False
+        
   - Edit: owns_home
     button: |
-      **Do you own a home?**:
+      **Do you own a home?**
       ${ word(yesno(owns_home)) }
   - Edit: lives_in_home
     button: |
-      **Do you live in the property you own?**:
+      **Do you live in the property you own?**
       ${ word(yesno(lives_in_home)) }
+    show if: owns_home
   - Edit: is_married
     button: |
-      **Are you married?**:
+      **Are you married?**
       ${ word(yesno(is_married)) }
+    show if: owns_home
   - Edit: owns_with_spouse
     button: |
-      **Do you own the property with your spouse?**:
+      **Do you own the property with your spouse?**
       ${ word(yesno(owns_with_spouse)) }
+    show if: owns_home and is_married
   - Edit: home_value
     button: |
-      **What is the value of your home?**:
+      **What is the value of your home?**
       ${ currency(home_value) }
+    show if: owns_home
   - Edit: has_mortgage
     button: |
-      **Do you have a mortgage on your property?**:
+      **Do you have a mortgage on your property?**
       ${ word(yesno(has_mortgage)) }
+    show if: owns_home
   - Edit: mortgage_remaining
     button: |
-      **How much of the mortgage do you still have to repay?**:
+      **How much of the mortgage do you still have to repay?**
       ${ currency(mortgage_remaining) }
+    show if: owns_home and has_mortgage
   - Edit: has_other_home_loans
     button: |
-      **Do you have other loans or liens on your home?**:
+      **Do you have other loans or liens on your home?**
       ${ word(yesno(has_other_home_loans)) }
+    show if: owns_home
   - Edit: other_home_loans_remaining
     button: |
-      **What is the total amount you owe on these other home loans or liens?**:
+      **What is the total amount you owe on these other home loans or liens?**
       ${ currency(other_home_loans_remaining) }
+    show if: owns_home and has_other_home_loans
+    
   - Edit: owns_car
     button: |
-      **Do you own a car?**:
+      **Do you own a car?**
       ${ word(yesno(owns_car)) }
   - Edit: car.value
     button: |
-      **What is the resale value of your car?**:
+      **What is the resale value of your car?**
       ${ currency(car.value) }
+    show if: owns_car
   - Edit: car_paid_off
     button: |
-      **Have you fully paid for your car?**:
+      **Have you fully paid for your car?**
       ${ word(yesno(car_paid_off)) }
+    show if: owns_car
   - Edit: car.loan
     button: |
-      **How much do you owe on your car?**:
+      **How much do you owe on your car?**
       ${ currency(car.loan) }
+    show if: owns_car and car_paid_off == False
   - Edit: owns_second_car
     button: |
-      **Do you own a second car?**:
+      **Do you own a second car?**
       ${ word(yesno(owns_second_car)) }
+    show if: owns_car
   - Edit: second_car.value
     button: |
-      **What is the resale value of your second car?**:
+      **What is the resale value of your second car?**
       ${ currency(second_car.value) }
+    show if: owns_car and owns_second_car      
   - Edit: second_car_paid_off
     button: |
-      **Have you fully paid for your second car?**:
+      **Have you fully paid for your second car?**
       ${ word(yesno(second_car_paid_off)) }
+    show if: owns_car and owns_second_car      
   - Edit: second_car.loan
     button: |
-      **How much do you owe on your second car?**:
+      **How much do you owe on your second car?**
       ${ currency(second_car.loan) }
+    show if: owns_car and owns_second_car and second_car_paid_off == False
+    
   - Edit: has_tools
     button: |
-      **Do you have any professional books or trade tools?**:
+      **Do you have any professional books or trade tools?**
       ${ word(yesno(has_tools)) }
   - Edit: value_tools
     button: |
-      **How much are your professional books or trade tools worth?**:
+      **How much are your professional books or trade tools worth?**
       ${ currency(value_tools) }
+    show if: has_tools
   - Edit: has_property_money
     button: |
-      **Do you have money in cash or in a bank account?**:
+      **Do you have money in cash or in a bank account?**
       ${ word(yesno(has_property_money)) }
   - Edit: value_money
     button: |
       **Amount of money or cash (not including exempt income)**:
       ${ currency(value_money) }
+    show if: has_property_money
   - Edit: has_property_other
     button: |
-      **Do you own other things (not including necessary items)?**:
+      **Do you own other things (not including necessary items)?**
       ${ word(yesno(has_property_other)) }
   - Edit: value_other
     button: |
       **Resale value of your other things**:
       ${ currency(value_other) }
+    show if: has_property_other
+    
   - Edit: user.name.first
     button: |
-      **What is your name?**:
+      **What is your name?**
       ${ user.name.full(middle="full") }
   - Edit: user.address.address
     button: |
-      **What is your address?**:
+      **What is your address?**
       ${ user.address.on_one_line() }
   - Edit: letter_date
     button: |
-      **When will you mail your letter?**:
+      **When will you mail your letter?**
       ${ format_date(letter_date) }
 ---
 id: debt info review screen
@@ -1239,16 +1342,42 @@ subquestion: |
 review:
   - Edit: debt_collector.name
     button: |
-      **What is the debt collector's name?**:
+      **What is the debt collector's name?**
       ${ debt_collector.name }
   - Edit: debt_collector.address.address
     button: |
-      **What is the debt collector's address?**:
+      **What is the debt collector's address?**
       ${ debt_collector.address.on_one_line() }
   - Edit: account_number
     button: |
-      **What is your account number?**:
+      **What is your account number?**
       ${ account_number }
+  - Edit: validate_debt
+    button: |
+      **Do you want ${ debt_collector } to validate the debt?**
+      ${ word(yesno(validate_debt)) }
+  - Edit: dispute_debt
+    button: |
+      **Do you dispute the debt that ${ debt_collector } says you owe?**
+      ${ word(yesno(dispute_debt)) }
+  - Edit: reason_for_dispute
+    button: |
+      **Why do you dispute this debt?**
+      ${ reason_for_dispute }
+    show if: dispute_debt
+  - Edit: contact_prefs
+    button: |
+      **How do you want ${ debt_collector } to contact you about the debt?**
+      % if contact_prefs == "stop":
+      Stop all contact.
+      % else:
+      Contact me only at the ways and times I specify.
+      % endif
+  - Edit: acceptable_contact
+    button: |
+      **Contact is okay in these ways and times:**
+      ${ acceptable_contact }
+    show if: contact_prefs == "ways"
 
 
 
@@ -1261,134 +1390,170 @@ question: |
 subquestion: |
   Edit your answers below.
 review:
+  - Edit: collection_proof_check
+    button: |
+      **Do you want to check if you are collection proof?**
+      % if collection_proof_check == "Yes":
+      Yes. I want to answer questions now.
+      % elif collection_proof_check == "already":
+      I already know that I am collection proof so I do not need to check.
+      % else:
+      I know that I am not collection proof.
+      % endif
   - Edit: has_employment_income
     button: |
-      **Do you have a job?**:
+      **Do you have a job?**
       ${ word(yesno(has_employment_income)) }
+    show if: collection_proof_check == "Yes"
   - Edit: paycheck_amount
     button: |
-      **How much do you get paid?**:
+      **How much do you get paid?**
       ${ currency(paycheck_amount) }
+    show if: has_employment_income
   - Edit: paycheck_frequency
     button: |
-      **How often do you get paid?**:
+      **How often do you get paid?**
       ${ paycheck_frequency }
-  - Edit: income_ssrb
+    show if: has_employment_income
+  - Edit: income_none
     button: |
-      **Do you receive Social Security retirement benefits?**:
-      ${ word(yesno(income_ssrb)) }
-  - Edit: income_ssi
-    button: |
-      **Do you receive Supplemental Security Income (SSI)?**:
-      ${ word(yesno(income_ssi)) }
-  - Edit: income_ssdi
-    button: |
-      **Do you receive Supplemental Security Disability Insurance (SSDI)?**:
-      ${ word(yesno(income_ssdi)) }
-  - Edit: income_public_aid
-    button: |
-      **Do you receive Public assistance like SNAP (foodstamps), TANF (welfare), or GA (General Assistance)?**:
-      ${ word(yesno(income_public_aid)) }
-  - Edit: income_va
-    button: |
-      **Do you receive Veteran's Benefits?**:
-      ${ word(yesno(income_va)) }
-  - Edit: income_pension
-    button: |
-      **Do you receive income from a pension?**:
-      ${ word(yesno(income_pension)) }  
+      **Exempt income you receive:**
+	  
+      % if income_ssrb:
+      * Social Security retirement benefit
+      % endif
+      % if income_ssi:
+      * Supplemental Security Income (SSI)
+      % endif
+      % if income_ssdi:
+      * Supplemental Security Disability Insurance (SSDI)
+      % endif
+      % if income_public_aid:
+      * Public assistance like SNAP (foodstamps), TANF (welfare), or GA (General Assistance)
+      % endif
+      % if income_va:
+      * Veteran's Benefits
+      % endif
+      % if income_pension:
+      * Income from a pension
+      % endif
+      % if income_none:
+      * None
+      % endif
+    show if: has_employment_income == False
+    
   - Edit: owns_home
     button: |
-      **Do you own a home?**:
+      **Do you own a home?**
       ${ word(yesno(owns_home)) }
   - Edit: lives_in_home
     button: |
-      **Do you live in the property you own?**:
+      **Do you live in the property you own?**
       ${ word(yesno(lives_in_home)) }
+    show if: owns_home
   - Edit: is_married
     button: |
-      **Are you married?**:
+      **Are you married?**
       ${ word(yesno(is_married)) }
+    show if: owns_home
   - Edit: owns_with_spouse
     button: |
-      **Do you own the property with your spouse?**:
+      **Do you own the property with your spouse?**
       ${ word(yesno(owns_with_spouse)) }
+    show if: owns_home and is_married
   - Edit: home_value
     button: |
-      **What is the value of your home?**:
+      **What is the value of your home?**
       ${ currency(home_value) }
+    show if: owns_home
   - Edit: has_mortgage
     button: |
-      **Do you have a mortgage on your property?**:
+      **Do you have a mortgage on your property?**
       ${ word(yesno(has_mortgage)) }
+    show if: owns_home
   - Edit: mortgage_remaining
     button: |
-      **How much of the mortgage do you still have to repay?**:
+      **How much of the mortgage do you still have to repay?**
       ${ currency(mortgage_remaining) }
+    show if: owns_home and has_mortgage
   - Edit: has_other_home_loans
     button: |
-      **Do you have other loans or liens on your home?**:
+      **Do you have other loans or liens on your home?**
       ${ word(yesno(has_other_home_loans)) }
+    show if: owns_home
   - Edit: other_home_loans_remaining
     button: |
-      **What is the total amount you owe on these other home loans or liens?**:
+      **What is the total amount you owe on these other home loans or liens?**
       ${ currency(other_home_loans_remaining) }
+    show if: owns_home and has_other_home_loans
+    
   - Edit: owns_car
     button: |
-      **Do you own a car?**:
+      **Do you own a car?**
       ${ word(yesno(owns_car)) }
   - Edit: car.value
     button: |
-      **What is the resale value of your car?**:
+      **What is the resale value of your car?**
       ${ currency(car.value) }
+    show if: owns_car
   - Edit: car_paid_off
     button: |
-      **Have you fully paid for your car?**:
+      **Have you fully paid for your car?**
       ${ word(yesno(car_paid_off)) }
+    show if: owns_car
   - Edit: car.loan
     button: |
-      **How much do you owe on your car?**:
+      **How much do you owe on your car?**
       ${ currency(car.loan) }
+    show if: owns_car and car_paid_off == False
   - Edit: owns_second_car
     button: |
-      **Do you own a second car?**:
+      **Do you own a second car?**
       ${ word(yesno(owns_second_car)) }
+    show if: owns_car
   - Edit: second_car.value
     button: |
-      **What is the resale value of your second car?**:
+      **What is the resale value of your second car?**
       ${ currency(second_car.value) }
+    show if: owns_car and owns_second_car      
   - Edit: second_car_paid_off
     button: |
-      **Have you fully paid for your second car?**:
+      **Have you fully paid for your second car?**
       ${ word(yesno(second_car_paid_off)) }
+    show if: owns_car and owns_second_car      
   - Edit: second_car.loan
     button: |
-      **How much do you owe on your second car?**:
+      **How much do you owe on your second car?**
       ${ currency(second_car.loan) }
+    show if: owns_car and owns_second_car and second_car_paid_off == False
+    
   - Edit: has_tools
     button: |
-      **Do you have any professional books or trade tools?**:
+      **Do you have any professional books or trade tools?**
       ${ word(yesno(has_tools)) }
   - Edit: value_tools
     button: |
-      **How much are your professional books or trade tools worth?**:
+      **How much are your professional books or trade tools worth?**
       ${ currency(value_tools) }
+    show if: has_tools
   - Edit: has_property_money
     button: |
-      **Do you have money in cash or in a bank account?**:
+      **Do you have money in cash or in a bank account?**
       ${ word(yesno(has_property_money)) }
   - Edit: value_money
     button: |
       **Amount of money or cash (not including exempt income)**:
       ${ currency(value_money) }
+    show if: has_property_money
   - Edit: has_property_other
     button: |
-      **Do you own other things (not including necessary items)?**:
+      **Do you own other things (not including necessary items)?**
       ${ word(yesno(has_property_other)) }
   - Edit: value_other
     button: |
       **Resale value of your other things**:
-      ${ currency(value_other) }  
+      ${ currency(value_other) }
+    show if: has_property_other
   
 ---  
 id: about you review screen
@@ -1401,13 +1566,13 @@ subquestion: |
 review:
   - Edit: user.name.first
     button: |
-      **What is your name?**:
+      **What is your name?**
       ${ user.name.full(middle="full") }
   - Edit: user.address.address
     button: |
-      **What is your address?**:
+      **What is your address?**
       ${ user.address.on_one_line() }
   - Edit: letter_date
     button: |
-      **When will you mail your letter?**:
+      **When will you mail your letter?**
       ${ format_date(letter_date) }
