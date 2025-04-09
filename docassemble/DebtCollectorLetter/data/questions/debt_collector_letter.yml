@@ -26,7 +26,7 @@ code: |
 # Road map
 sections:
   - section_intro: Start
-  - section_debt: Debt info    
+  - section_debt: Debt info
   - section_calculator: Collection proof calculator (optional)
   - section_about_you: About you
   - section_download: Download
@@ -56,6 +56,7 @@ code: |
   
   set_progress(15)
   nav.set_section('calculator')
+  collection_proof_explainer
   if collection_proof_check == "Yes":
     has_employment_income
     if has_employment_income == True:
@@ -164,7 +165,7 @@ subquestion: |
 
   You can still be sued for the debt, but the debt collector will be limited in their ability to collect on a court judgment.
 
-  Learn about [**what income and property are exempt from collection**](https://www.illinoislegalaid.org/legal-information/credit-and-debt-issues).
+  To learn more, read ILAO's article about [**what income and property are exempt from collection**](https://www.illinoislegalaid.org/legal-information/credit-and-debt-issues).
 field: sees_nav_bar
 ---
 id: instructions
@@ -294,7 +295,7 @@ question: |
 subquestion: |
   The debt collector could be a collection agency or a collections lawyer. This is not the original creditor.
 
-  ${ collapse_template(creditor_definition_help) }  
+  ${ collapse_template(creditor_definition_help) }
 
   The debt collector could contact you by:
   
@@ -345,15 +346,55 @@ fields:
       name_suffix()
     required: False
 ---
+id: collection proof explainer
+continue button field: collection_proof_explainer
+question: |
+  Income and property that are collection proof
+subquestion: |
+  If your income is from certain sources or below a certain level, it is legally protected from collection. Also, the law protects the things you own up to a certain amount.
+  
+  Income from **{public benefits}** or **{these other sources}** are exempt.
+  
+  Income from a job, up to $675.00 per week, is also **{exempt}**.
+  
+  If you own your home, up to $15,000.00 in equity is protected. If you are married and own the home with your spouse, up to $30,000.00 is protected.
+
+  You can have up to $4,000.00 worth of other belongings, including up to $2,400.00 for 1 or 2 cars.
+
+  To learn more, read ILAO's article about [**what income and property are exempt from collection**](https://www.illinoislegalaid.org/legal-information/credit-and-debt-issues).
+
+terms:
+  - "public benefits": |
+      These publice benefits are exempt from collection:
+
+      * Social Security retirement benefits
+      * Supplemental Security Income (SSI)
+      * Supplemental Security Disability Insurance (SSDI)
+      * Public assistance like SNAP (foodstamps), TANF (welfare), or GA (General Assistance)
+      * Veteran's benefits
+      * Pension like municipal or teachers' pension, or Railroad retirement
+  - "these other sources": |
+      These other sources of income are also exempt. They are not subject to collection.
+  
+      * Student loans
+      * College savings account
+      * Child support for your children
+      * Temporary support (also called alimony or maintenance)
+      * Trust fund
+      * Workers' Compensation
+      * Settlement or judgment from wrongful death or personal injury
+      * Benefits from a life insurance policy
+      * Cash awarded as victim of crime
+---
 id: collection proof check
 question: |
   Do you want to check if you are collection proof?
 subquestion: |
   Creditors can only take your money or property if your income or belongings are above a certain amount. If they aren't, you may be collection proof (also called "judgment proof"). This means creditors cannot garnish your wages or seize your assets, even if they sue you and get a judgment against you.
 
-  ADD COLLAPSE TEMPLATE with short def of typical collection proof criteria.
+  Telling creditors that you are collection proof might make them slow down their demands for payment or offer a discounted settlement. However, if tell them about income or property that can be collected, now or in the future, they might try again.
 
-  Telling creditors that you are collection proof might make them slow down their demands for payment. However, if do you have income or property that can be collected, now or in the future, they might try again.
+  ${ collapse_template(collection_proof_language_help) }
   
   If you already know whether you are collection proof, you can skip this step. Otherwise, we can help you determine if you qualify.
 fields:
@@ -363,6 +404,14 @@ fields:
       - Yes. I want to answer a few more questions to see if I am collection proof.: Yes
       - I already know that I am collection proof so I do not need to check. (Skip calculator and **include collection proof language** in my letter.): already
       - I know that I have too much income or own too much property to be collection proof. I don't want to include this in my letter. (Skip calculator and **do not include collection proof language** in my letter.): skip
+---
+template: collection_proof_language_help
+subject: |
+  **What collection proof language will be added to the letter?**
+content: |
+    This is the **collection proof language** that will appear in your letter.
+      
+    "Since all my income and property are exempt under the laws of Illinois, any attempt to collect this debt will not be successful."
 ---
 id: has job
 question: |
@@ -442,7 +491,7 @@ template: exempt_income_help
 subject: |
   **Show me other kinds of exempt income**
 content: |  
-  These sources of income are also **{exempt}**. You do not need to list these in your letter.
+  These sources of income are also **{exempt}**. They are not subject to collection.
 
   * Student loans
   * College savings account
@@ -968,7 +1017,7 @@ question: |
 subquestion: |
   Your forms are ready. View and download your forms below. Click **Make changes** to fix any mistakes.
 
-  After you get your letter, sign it, make a copy, and send it by **{Certified Mail}**.  
+  After you get your letter, sign it, make a copy, and send it along with copies of any supporting documents to the debt collector.  
 
   ${ action_button_html(url_action('review_answers'), label=':edit: Make changes', color='success', size="md") }
 
