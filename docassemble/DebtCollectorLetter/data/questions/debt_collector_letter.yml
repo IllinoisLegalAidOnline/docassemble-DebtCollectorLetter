@@ -49,7 +49,6 @@ code: |
   debt_collector.name.first
   account_number
   debt_collector.address.address
-  # able_to_pay
   validate_debt
   dispute_debt
   contact_prefs
@@ -58,18 +57,15 @@ code: |
   nav.set_section('section_calculator')
   collection_proof_explainer
   if collection_proof_check == "Yes":
-    has_employment_income
-    if has_employment_income == True:
+    if has_employment_income:
       employment_income_amount  
-    else:
-      exempt_income_choices
     if employment_income_exempt == False:
       not_qualified_over_income_limit  
     else:  
       income_qualified
 
     # only ask about home if income is exempt
-    if income_qualified:
+    if employment_income_exempt:
       set_progress(20)
       owns_home
       if owns_home == True:
@@ -90,7 +86,7 @@ code: |
               not_qualified_too_much_home_equity
 
     # only ask about cars if income and home are exempt
-    if income_qualified and home_equity_exempt:
+    if employment_income_exempt and home_equity_exempt:
       set_progress(40)
       if owns_car == True:
         car.value
@@ -111,7 +107,7 @@ code: |
                 not_qualified_too_much_second_car_equity
 
     # only ask tools and personal property if income, home, and car are exempt
-    if income_qualified and home_equity_exempt:
+    if employment_income_exempt and home_equity_exempt:
       if owns_car:
         if is_car_exempt:
           if owns_second_car:
@@ -259,6 +255,8 @@ subquestion: |
   
   * "I am not responsible for the debt you're trying to collect."
   * "The amount that you are seeking to collect is incorrect."
+
+  You can also dispute how the debt appears on a credit report or background check. To learn how, read ILAO's article, [**Disputing inaccurate information on your credit report or background check**](https://www.illinoislegalaid.org/node/32471).
   
   **Note:** When you send your letter, be sure to attach any paperwork that supports why you dispute what they say you owe.
 fields:
@@ -427,14 +425,14 @@ fields:
     datatype: radio
     choices:
       - Yes. I want to answer a few more questions to see if I am collection proof.: Yes
-      - I already know that I am collection proof so I do not need to check. (Skip calculator and **include collection proof language** in my letter.): already
-      - I know that I have too much income or own too much property to be collection proof. I don't want to include this in my letter. (Skip calculator and **do not include collection proof language** in my letter.): skip
+      - I already know that I am collection proof so I do not need to check. (Skip calculator and **include collection proof statement** in my letter.): already
+      - I know that I have too much income or own too much property to be collection proof. I don't want to include this in my letter. (Skip calculator and **do not include collection proof statement** in my letter.): skip
 ---
 template: collection_proof_language_help
 subject: |
-  **What collection proof language will be added to the letter?**
+  **What collection proof statement will be added to the letter?**
 content: |
-    This is the **collection proof language** that will appear in your letter.
+    If you are collection proof, this is the statement that will appear in your letter.
       
     "Since all my income and property are exempt under the laws of Illinois, any attempt to collect this debt will not be successful."
 ---
@@ -451,6 +449,8 @@ question: |
   How much do you get paid from your job?
 subquestion: |
   This is your take-home pay after federal and state taxes.
+
+  You do not need to include income from **{public benefits}** or **{these other sources}**.
 fields:
   - Amount: paycheck_amount
     datatype: currency
