@@ -60,8 +60,6 @@ code: |
       employment_income_amount  
     if employment_income_exempt == False:
       not_qualified_over_income_limit  
-    else:  
-      income_qualified
 
     # only ask about home if income is exempt
     if employment_income_exempt:
@@ -79,9 +77,7 @@ code: |
               mortgage_remaining
             if has_other_home_loans:
               other_home_loans_remaining
-            if home_equity_exempt:
-              home_qualified
-            else: 
+            if home_equity_exempt == False:
               not_qualified_too_much_home_equity
 
     # only ask about cars if income and home are exempt
@@ -116,6 +112,10 @@ code: |
             property_questions
       else:
         property_questions
+
+  if collection_proof_check == "Yes":
+    if employment_income_exempt and home_equity_exempt and property_exempt:
+      collection_proof_good_news
   
   set_progress(75)
   nav.set_section('section_about_you')
@@ -139,8 +139,6 @@ code: |
   personal_property_choices
   if property_exempt == False:
     not_qualified_too_much_property
-  else: 
-    property_qualified  
 
   property_questions = True
 
@@ -448,7 +446,7 @@ question: |
 subquestion: |
   Creditors can only take your money or property if your income or belongings are above a certain amount. If they aren't, you may be collection proof (also called "judgment proof"). This means creditors cannot garnish your wages or seize your assets, even if they sue you and get a judgment against you.
 
-  Telling creditors that you are collection proof might make them slow down their demands for payment or offer a discounted settlement. However, if tell them about income or property that can be collected, now or in the future, they might try to collect from you later.
+  Telling creditors that you are collection proof might make them slow down their demands for payment or offer a discounted settlement. However, if you tell them about income or property that can be collected, now or in the future, they might try to collect from you later.
 
   ${ collapse_template(collection_proof_language_help) }
   
@@ -1019,6 +1017,15 @@ subquestion: |
   
   Click **Next** to continue making your letter.
 ---
+id: collection proof determination
+continue button field: collection_proof_good_news
+question: |
+  Good news!
+subquestion: |
+  Based on your answers, your income and belongings are **{exempt}** from collection.
+  
+  Click **Next** to continue making your letter.
+---
 id: debt collector name
 question: |
   What is the name of the company that is trying to collect a debt?
@@ -1052,6 +1059,7 @@ subquestion: |
 
 fields:
   - Account number : account_number
+    maxlength: 40
 ---
 template: help_account_number
 subject: |
