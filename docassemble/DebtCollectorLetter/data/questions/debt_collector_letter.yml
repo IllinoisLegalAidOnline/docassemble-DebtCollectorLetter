@@ -1,7 +1,7 @@
 metadata:
   title: Debt collector letter
   short title: Debt collector letter
-  comment: This program creates a letter to a debt collector that can validate or dispute a debt, stop or specify contact, and explain that the debtor is exempt from collection under federal and Illinois law.
+  comment: This program creates a letter to a debt collector that can validate or dispute a debt, stop or specify contact terms, and explain that the debtor is exempt from collection under federal and Illinois law.
   authors:
     - Matt Newsted
 ---
@@ -158,7 +158,29 @@ code: |
 
   stuff_to_snapshot['zip'] = showifdef('user.address.zip')
 
+  stuff_to_snapshot['validate_debt'] = showifdef('validate_debt')
+
+  stuff_to_snapshot['dispute_debt'] = showifdef('dispute_debt')
+
+  stuff_to_snapshot['contact_prefs'] = showifdef('contact_prefs')
+
+  stuff_to_snapshot['collection_proof_check'] = showifdef('collection_proof_check')
+
+  try:
+    if showifdef('collection_proof_check') == "Yes":
+      if showifdef('employment_income_exempt') and showifdef('home_equity_exempt') and showifdef('property_exempt'):
+        stuff_to_snapshot['collection_proof_by_program'] = True
+      else:
+        stuff_to_snapshot['collection_proof_by_program'] = False  
+  except:
+    pass
+  
   stuff_to_snapshot['downloaded_forms'] = showifdef('forms_assembling')
+
+  try:
+    stuff_to_snapshot['session_id'] = current_context().session
+  except:
+    pass
   
   store_variables_snapshot(
   	data=stuff_to_snapshot, persistent=True
@@ -173,6 +195,31 @@ code: |
   reconsider('snapshot_interview_state')
   snapshot_forms = True
 ---
+terms:
+  - "original creditor": |
+      An **original creditor** is the company you first borrowed from or owed money to.
+  - "public benefits": |
+      These **public benefits** are exempt from collection:
+
+      * Social Security retirement benefits
+      * Supplemental Security Income (SSI)
+      * Supplemental Security Disability Insurance (SSDI)
+      * Public assistance like SNAP (foodstamps), TANF (welfare), or GA (General Assistance)
+      * Veteran's benefits
+      * Pension like municipal or teachers' pension, or Railroad retirement
+  - "other sources": |
+      These **other sources** of income are also exempt. They are not subject to collection.
+  
+      * Student loans
+      * College savings account
+      * Child support for your children
+      * Temporary support (also called alimony or maintenance)
+      * Trust fund
+      * Workers' Compensation
+      * Settlement or judgment from wrongful death or personal injury
+      * Benefits from a life insurance policy
+      * Cash awarded as victim of crime
+---
 id: welcome
 question: |
   Debt collector letter
@@ -181,8 +228,8 @@ subquestion: |
 
   This program creates a letter that can tell a debt collector:
 
-  * They need to provide proof that you owe the debt they are trying to collect,
-  * You disagree with the debt they say you owe,
+  * To provide proof that you owe the debt,
+  * That you disagree with the debt,
   * To stop contacting you, or only contact you in certain ways and times, and
   * Your income and belongings are **{exempt}** from being collected, also called "collection proof".
   
@@ -198,7 +245,7 @@ question: |
 subquestion: |
   To use this program you will need:
 
-  * A bill or demand from a debt collector that includes their company name and address,
+  * A debt collector's name and address,
   * Your account number used by the debt collector,
   * Information about your income and property if you want us to help you figure out if you are collection proof.
 
@@ -226,8 +273,9 @@ subquestion: |
   * Overdue child support,
   * Overdue maintenance (formerly called alimony),
   * Court-ordered restitution to a crime victim,
-  * Back taxes, or
-  * Non-tax debt owed to a federal agency, such as student loans or some federally-funded home loans.
+  * Back taxes,
+  * Non-tax debt owed to a federal agency, such as student loans or some federally-funded home loans, or
+  * Fines, fees, and penalties owed to a state or local government (like traffic tickets or court costs).
   
   You may have to pay these debts even if your income and property are **{exempt}** from being collected.
   
@@ -239,10 +287,11 @@ question: |
 subquestion: |
   Validating the debt means getting more information about the debt. This includes details about:
 
-  * Why ${ debt_collector } thinks you owe the debt,
-  * Who ${ debt_collector } thinks you owe the debt to,
+  * The name and address of the **{original creditor}**,
   * The amount and age of the debt, and
   * Why ${ debt_collector } thinks they have the authority to collect the debt.
+
+  If you include this in your letter within 30 days of first hearing from the debt collector, they have to stop collecting the debt until they send you this information.  
 fields:
   - no label: validate_debt
     datatype: yesnoradio
@@ -257,8 +306,11 @@ subquestion: |
   
   * "I am not responsible for the debt you're trying to collect."
   * "The amount that you are seeking to collect is incorrect."
+  * "I already paid this debt.
+  * "You have not provided enough proof that I owe this debt."
+  * "This debt includes charges that I did not personally authorize."
 
-  You can also dispute how the debt appears on a credit report or background check. To learn how, read ILAO's article, [**Disputing inaccurate information on your credit report or background check**](https://www.illinoislegalaid.org/node/32471).
+  You can send a different letter to dispute how the debt appears on a credit report or background check. To learn how, read ILAO's article, [**Disputing inaccurate information on your credit report or background check**](https://www.illinoislegalaid.org/node/32471).
   
   **Note:** When you send your letter, be sure to attach any paperwork that supports why you dispute what they say you owe.
 fields:
@@ -282,7 +334,7 @@ fields:
     datatype: radio
     choices:
       - I want ${ debt_collector } to stop all contact with me.: stop
-      - I want ${ debt_collector } to contact me only at the ways and times I specify. (You can explain below.): ways
+      - I want ${ debt_collector } to contact me only at the ways and times I want. (You can explain below.): ways
   - Contact about the debt is okay in these ways and times:: acceptable_contact
     datatype: area
     maxlength: 150
@@ -318,7 +370,7 @@ id: contact by debt collector
 question: |
   Have you been contacted by a debt collector?
 subquestion: |
-  The debt collector could be a collection agency or a collections lawyer. This is not the original creditor.
+  The debt collector could be a debt buyer, a collection agency, or a law firm that is suing you for a debt. A debt collector is not the **{original creditor}**.
 
   ${ collapse_template(creditor_definition_help) }
 
@@ -378,38 +430,17 @@ question: |
 subquestion: |
   If your income is from certain sources or below a certain level, it is legally protected from collection. Also, the law protects the things you own up to a certain amount.
   
-  Income from **{public benefits}** or **{these other sources}** are exempt.
+  Income from **{public benefits}** or these **{other sources}** are exempt.
   
-  Income from employment, up to $675.00 per week, is also **{exempt}**.
+  Income from employment, up to $675 per week, is also **{exempt}**.
   
-  If you own your home, up to $15,000.00 in equity is protected. If you are married and own the home with your spouse, up to $30,000.00 is protected.
+  If you own your home, up to $15,000 in equity is protected. If you are married and own the home with your spouse, up to $30,000 is protected.
 
-  You can have up to $4,000.00 worth of other belongings, including up to $2,400.00 for 1 or 2 cars.
+  Up to $2,400 of equity is protected for one car.
+  
+  You can shield up to $4,000 of any personal property you choose, except for real estate, with the "wildcard" exemption. This can be applied to cash, household goods, or to your car if you have more than $2,400 of equity in it.
 
   To learn more, read ILAO's article about [**collection proof income and property**](https://www.illinoislegalaid.org/node/31936).
-
-terms:
-  - "public benefits": |
-      These publice benefits are exempt from collection:
-
-      * Social Security retirement benefits
-      * Supplemental Security Income (SSI)
-      * Supplemental Security Disability Insurance (SSDI)
-      * Public assistance like SNAP (foodstamps), TANF (welfare), or GA (General Assistance)
-      * Veteran's benefits
-      * Pension like municipal or teachers' pension, or Railroad retirement
-  - "these other sources": |
-      These other sources of income are also exempt. They are not subject to collection.
-  
-      * Student loans
-      * College savings account
-      * Child support for your children
-      * Temporary support (also called alimony or maintenance)
-      * Trust fund
-      * Workers' Compensation
-      * Settlement or judgment from wrongful death or personal injury
-      * Benefits from a life insurance policy
-      * Cash awarded as victim of crime
 ---
 id: collection proof check
 question: |
@@ -417,7 +448,7 @@ question: |
 subquestion: |
   Creditors can only take your money or property if your income or belongings are above a certain amount. If they aren't, you may be collection proof (also called "judgment proof"). This means creditors cannot garnish your wages or seize your assets, even if they sue you and get a judgment against you.
 
-  Telling creditors that you are collection proof might make them slow down their demands for payment or offer a discounted settlement. However, if tell them about income or property that can be collected, now or in the future, they might try again.
+  Telling creditors that you are collection proof might make them slow down their demands for payment or offer a discounted settlement. However, if tell them about income or property that can be collected, now or in the future, they might try to collect from you later.
 
   ${ collapse_template(collection_proof_language_help) }
   
@@ -452,7 +483,7 @@ question: |
 subquestion: |
   This is your take-home pay after federal and state taxes.
 
-  You do not need to include income from **{public benefits}** or **{these other sources}**.
+  You do not need to include income from **{public benefits}** or these **{other sources}**.
 fields:
   - Amount: paycheck_amount
     datatype: currency
@@ -540,7 +571,7 @@ question: |
 subquestion: |
   You make ${ currency(weekly_income) } per week.
   
-  If you make over $675.00 per week, your income is not protected. Your letter will not state that you are collection proof, but it can still tell the creditor if you dispute the debt, want to validate the debt, or want them to stop contacting you. 
+  If you make over $675 per week, your income is not protected. Your letter will not state that you are collection proof, but it can still tell the creditor if you dispute the debt, want to validate the debt, or want them to stop contacting you. 
   
   Click **Next** to continue making your letter.
 ---
@@ -571,7 +602,7 @@ subquestion: |
 #  if income_pension == True:
 #    income_sources.append("pension income")
 #  if has_employment_income == True:
-#    income_sources.append("wages amounting to less than $675.00 per week after state and federal taxes")
+#    income_sources.append("wages amounting to less than $675 per week after state and federal taxes")
 #  income_sources.there_are_any = True
 #  income_sources.there_is_another = False
 ---
@@ -861,7 +892,7 @@ id: trade tools
 question: |
   Professional books or trade tools
 subquestion: |
-  The law protects up to ${ currency(1500) } worth of professional books or trade tools. Examples include a set of reference books for teaching or a lawnmower for your landscaping business.
+  The law protects up to $1500 worth of professional books or trade tools. Examples include a set of reference books for teaching or a lawnmower for your landscaping business.
   
   Do you have any professional books or trade tools?
 fields:
@@ -997,6 +1028,8 @@ fields:
 id: debt collector address
 question: |
   What is ${ debt_collector.possessive('address') }?
+subquestion: |
+  You can look on a letter you received from ${ debt_collector.name.first } or on your credit report to find their address.
 fields:
   - Street address: debt_collector.address.address
     address autocomplete: True
@@ -1148,7 +1181,7 @@ review:
       % if contact_prefs == "stop":
       Stop all contact.
       % else:
-      Contact me only at the ways and times I specify.
+      Contact me only at the ways and times I want.
       % endif
   - Edit: acceptable_contact
     button: |
@@ -1353,7 +1386,7 @@ review:
       % if contact_prefs == "stop":
       Stop all contact.
       % else:
-      Contact me only at the ways and times I specify.
+      Contact me only at the ways and times I want.
       % endif
   - Edit: acceptable_contact
     button: |

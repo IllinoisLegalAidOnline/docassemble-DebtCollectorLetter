@@ -44,7 +44,7 @@ def find_package_data(where='.', package='', exclude=standard_exclude, exclude_d
     return out
 
 setup(name='docassemble.DebtCollectorLetter',
-      version='0.0.6',
+      version='0.0.7',
       description=('A docassemble extension.'),
       long_description='# docassemble.DebtCollectorLetter\r\n\r\nA docassemble extension.\r\n\r\n## Author\r\n\r\nMatt Newsted, mnewsted@illinoislegalaid.org\r\n\r\n',
       long_description_content_type='text/markdown',
@@ -53,7 +53,7 @@ setup(name='docassemble.DebtCollectorLetter',
       license='The MIT License (MIT)',
       url='https://docassemble.org',
       packages=find_namespace_packages(),
-      install_requires=['docassemble.AssemblyLine>=3.2.0', 'docassemble.ILAO>=1.0.99'],
+      install_requires=['docassemble.AssemblyLine @ git+https://github.com/SuffolkLITLab/docassemble-AssemblyLine.git@main', 'docassemble.ILAO>=1.1.10'],
       zip_safe=False,
       package_data=find_package_data(where='docassemble/DebtCollectorLetter/', package='docassemble.DebtCollectorLetter'),
      )
