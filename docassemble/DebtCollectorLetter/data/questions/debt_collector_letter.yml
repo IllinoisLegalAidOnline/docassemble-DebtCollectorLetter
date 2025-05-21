@@ -316,8 +316,8 @@ fields:
     datatype: yesnoradio
   - Why do you dispute this debt?: reason_for_dispute
     datatype: area
-    maxlength: 150
-    rows: 4
+    maxlength: 300
+    rows: 8
     show if:
       variable: dispute_debt
       is: True
@@ -335,8 +335,8 @@ fields:
       - I want ${ debt_collector } to contact me only at the ways and times I want. (You can explain below.): ways
   - Contact about the debt is okay in these ways and times:: acceptable_contact
     datatype: area
-    maxlength: 150
-    rows: 4
+    maxlength: 300
+    rows: 8
     show if:
       variable: contact_prefs
       is: ways
@@ -669,7 +669,9 @@ id: home value
 question: |
   What is the value of your home?
 subquestion: |
-  This is the amount a buyer would pay if you sold your home today. If you do not have a recent appraisal, estimate the value. 
+  This is the amount a buyer would pay if you sold your home today. If you do not have a recent appraisal, estimate the value.
+
+  If you live in and own a multi-unit building, enter the full value of the building.
 fields:
   - Home value: home_value
     datatype: currency
