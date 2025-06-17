@@ -46,8 +46,8 @@ code: |
   if debt_collector_contact == False:
     not_qualified_no_contact
   debt_collector.name.first
-  account_number
   debt_collector.address.address
+  account_number
   validate_debt
   dispute_debt
   contact_prefs
@@ -229,11 +229,11 @@ subquestion: |
   * To provide proof that you owe the debt,
   * That you disagree with the debt,
   * To stop contacting you, or only contact you in certain ways and times, and
-  * Your income and belongings are **{exempt}** from being collected, also called "collection proof".
+  * Your income and belongings are currently **{exempt}** from being collected, also called "collection proof".
   
-  The letter can include any or all of these things. You may still owe some or all of the debt, but this letter can help you be sure of what you owe, and it can sometimes lead to a workable payment plan.
+  The letter can include any or all of these things. You may still owe some or all of the debt. This letter can help you be sure of what you owe, and may help you negotiate a payment plan that you can afford.
 
-  To learn more, read ILAO's article about [**responding to debt collection**](https://www.illinoislegalaid.org/node/32906).
+  To learn more, read ILAO's article about [**responding to debt collectors**](https://www.illinoislegalaid.org/node/32906).
 field: sees_nav_bar
 ---
 id: instructions
@@ -241,13 +241,13 @@ continue button field: how_to_use
 question: |
   Instructions
 subquestion: |
-  To use this program you will need:
+  You must have been contacted by a debt collector to use this program. To make your letter you will need:
 
   * A debt collector's name and address,
   * Your account number used by the debt collector,
-  * Information about your income and property if you want us to help you figure out if you are collection proof.
+  * Information about your income and property if you want us to help you figure out if you are currently collection proof. This includes public benefits or financial assistance, if you receive any.
 
-  Set aside 5 to 10 minutes to finish this program. You can login and save your work to continue later. 
+  Set aside 10 to 15 minutes to finish this program. You can log in and save your work to continue later. 
 
   ${ collapse_template(help_example) }  
 
@@ -266,16 +266,16 @@ continue button field: debt_information
 question: |
   Debt information
 subquestion: |
-  Special rules apply to certain kinds of debt, including:
+  There are many kinds of debt, and they are not all treated the same. Special rules apply to certain kinds of debt, including:
 
   * Overdue child support,
-  * Overdue maintenance (formerly called alimony),
+  * Overdue maintenance from a former marriage (also called "alimony"),
   * Court-ordered restitution to a crime victim,
   * Back taxes,
   * Non-tax debt owed to a federal agency, such as student loans or some federally-funded home loans, or
   * Fines, fees, and penalties owed to a state or local government (like traffic tickets or court costs).
   
-  You may have to pay these debts even if your income and property are **{exempt}** from being collected.
+  **Note:** You may have to pay these debts even if your income and property are **{exempt}** from being collected.
   
   If someone is trying to collect these debts, you might want to talk to a lawyer. Use [**Get Legal Help**](https://www.illinoislegalaid.org/get-legal-help) to find free or low-cost legal services in your area.
 ---
@@ -303,6 +303,7 @@ subquestion: |
   Here are some examples of why you might dispute the debt:
   
   * "I am not responsible for the debt you're trying to collect."
+  * "This debt is a result of identity theft."
   * "The amount that you are seeking to collect is incorrect."
   * "I already paid this debt.
   * "You have not provided enough proof that I owe this debt."
@@ -341,7 +342,7 @@ fields:
       variable: contact_prefs
       is: ways
     help: |
-      Remember to list specific days and times you want to be contacted. Also list the phone numbers, mailing addresses, or email addresses that you want them to use. 
+      Remember to list specific days and times you want to be contacted. Also list the phone numbers, mailing addresses, or email addresses that you want them to use.[NEWLINE][NEWLINE]Example: I will only accept text messages on weekdays from 2:00PM to 5:00PM.
 ---
 id: unable to pay
 question: |
@@ -360,7 +361,9 @@ continue button field: sued_by_debt_collector
 question: |
   Lawsuit information
 subquestion: |
-  If you receive a Complaint and Summons about a debt, you are being sued. You must respond to the lawsuit. In some cases you must file an **{Appearance}** and an **{Answer}**. To learn more, read ILAO's article about [**responding to a lawsuit**](https://www.illinoislegalaid.org/node/32236).
+  If you receive a Complaint and Summons about a debt, you are being sued. To learn more about what to do when you are sued for debt collection, read ILAO's article about [**receiving a debt collection lawsuit**](https://www.illinoislegalaid.org/node/185946).
+  
+  You must respond to the lawsuit. In some cases you must file an **{Appearance}** and an **{Answer}**. To learn more about what to file, read ILAO's article about [**responding to a lawsuit**](https://www.illinoislegalaid.org/node/32236).
 
   If you would like help finding free or low-cost legal services in your area, use [**Get Legal Help**](https://www.illinoislegalaid.org/get-legal-help).
 ---
@@ -399,6 +402,8 @@ question: |
   Sorry
 subquestion: |
   You must have been contacted by a debt collector to use this program.
+
+  There may be other things besides this letter that can help. Use [**Get Legal Help**](https://www.illinoislegalaid.org/get-legal-help) to find free or low-cost legal services in your area.
 buttons:
   - Exit: exit
   - Restart: restart
@@ -426,7 +431,7 @@ continue button field: collection_proof_explainer
 question: |
   Income and property that are collection proof
 subquestion: |
-  If your income is from certain sources or below a certain level, it is legally protected from collection. Also, the law protects the things you own up to a certain amount.
+  If your income is from certain sources or below a certain level, debt collectors cannot legally seize your income. Also, the law protects the things you own up to a certain amount.
   
   Income from **{public benefits}** or these **{other sources}** are exempt.
   
@@ -436,7 +441,7 @@ subquestion: |
 
   Up to $2,400 of equity is protected for one car.
   
-  You can shield up to $4,000 of any personal property you choose, except for real estate, with the "wildcard" exemption. This can be applied to cash, household goods, or to your car if you have more than $2,400 of equity in it.
+  You can protect up to $4,000 of any personal property you choose, except for real estate, with the "wildcard" exemption. This can be applied to cash, household goods, or to your car if you have more than $2,400 of equity in it.
 
   To learn more, read ILAO's article about [**collection proof income and property**](https://www.illinoislegalaid.org/node/31936).
 ---
@@ -444,11 +449,13 @@ id: collection proof check
 question: |
   Do you want to check if you are collection proof?
 subquestion: |
-  Creditors can only take your money or property if your income or belongings are above a certain amount. If they aren't, you may be collection proof (also called "judgment proof"). This means creditors cannot garnish your wages or seize your assets, even if they sue you and get a judgment against you.
+  Creditors can only take your money or property if your income or belongings are above a certain amount. If they aren't, you may be collection proof (also called "judgment proof"). This means creditors cannot garnish your wages or seize your assets, even if they sue you and the court decides you owe them money.
 
-  Telling creditors that you are collection proof might make them slow down their demands for payment or offer a discounted settlement. However, if you tell them about income or property that can be collected, now or in the future, they might try to collect from you later.
+  Telling creditors that you are collection proof might make them slow down their demands for payment or offer a discounted settlement. To learn more, read ILAO's article, [**Negotiating with a debt collector or debt buyer**](https://www.illinoislegalaid.org/node/184721).
 
   ${ collapse_template(collection_proof_language_help) }
+
+  **Note:** You are collection proof only as long as your financial condition stays the same or gets worse. If your financial condition improves, creditors who have a judgment against you may be able to collect money from you in the future, when you are no longer collection proof.
   
   If you already know whether you are collection proof, you can skip this step. Otherwise, we can help you determine if you qualify.
 fields:
@@ -465,7 +472,7 @@ subject: |
 content: |
     If you are collection proof, this is the statement that will appear in your letter.
       
-    "Since all my income and property are exempt under the laws of Illinois, any attempt to collect this debt will not be successful."
+    "Since all my income, property, and benefits are exempt under the laws of Illinois, any attempt to collect this debt will not be successful."
 ---
 id: has job
 question: |
@@ -479,7 +486,7 @@ continue button field: employment_income_amount
 question: |
   How much do you get paid from your job?
 subquestion: |
-  This is your take-home pay after federal and state taxes.
+  This is your take-home pay after federal and state taxes have been deducted.
 
   You do not need to include income from **{public benefits}** or these **{other sources}**.
 fields:
@@ -638,14 +645,14 @@ id: married
 question: |
   Are you married?
 subquestion: |
-  If you are married and own the property with your spouse, more of the value of the property is **{exempt}**.
+  If you are married and own the property with your spouse, more of the value of the home is **{exempt}**.
 fields:
   - no label: is_married
     datatype: yesnoradio
 ---
 id: owns home with spouse
 question: |
-  Do you own the property with your spouse?
+  Do you own the home with your spouse?
 fields:
   - no label: owns_with_spouse
     datatype: yesnoradio
@@ -655,9 +662,9 @@ continue button field: not_qualified_too_much_home_equity
 question: |
   Too much home equity
 subquestion: |
-  Up to ${ currency(homestead_exemption) } equity in your home is protected by law. This is called the Homestead Exemption.
-  
-  Beyond the **{exempt}** amount, there is ${ currency(home_equity - homestead_exemption) } of equity in your home.
+  The law protects up to ${ currency(homestead_exemption) } of the value you own in your home. This is called the Homestead Exemption.
+
+  Based on the information you provided, you own ${ currency(home_equity) } of your home's value, so you do not qualify for the full Homestead Exemption and are not collection proof.
   
   You may want to talk with a lawyer about protecting your home from collection. If you would like help finding free or low-cost legal services in your area, use [**Get Legal Help**](https://www.illinoislegalaid.org/get-legal-help).
   
@@ -679,9 +686,9 @@ fields:
 ---
 id: mortgage on home
 question: |
-  Do you have a mortgage on your property?
+  Do you have a mortgage on your home?
 subquestion: |
-  A mortgage is money you borrowed to pay for the property.
+  A mortgage is money you borrowed from banks, credit unions, or online lenders to pay for the property.
 fields:
   - no label: has_mortgage
     datatype: yesnoradio
@@ -710,9 +717,20 @@ subquestion: |
   * A second mortgage,
   * A home equity loan or line of credit, or
   * A judgment or mechanic's lien.
+
+  ${ collapse_template(help_loans_and_liens) }  
+  
 fields:
   - no label: has_other_home_loans
     datatype: yesnoradio
+---
+template: help_loans_and_liens
+subject: |
+  **Explain more about loans and liens**
+content: |  
+  A **loan** is money that someone lets you borrow, with the promise that you'll pay it back later. Most of the time, you will also have to pay interest.
+  
+  A **lien** is a legal right that a person or company has to take something you own, such as a car or home, if you don’t pay back a debt. A lien does not give them the property right away, but it means they can take it if you don't pay back your debt within a specified timeframe. 
 ---
 id: other home loan value
 question: |
@@ -792,7 +810,7 @@ question: |
 subquestion: |
   This is the amount remaining to be paid for your car.
 fields:
-  - Amount owing: car.loan
+  - Amount still owed: car.loan
     datatype: currency
     min: 0
 ---
@@ -845,7 +863,7 @@ question: |
 subquestion: |
   This is the amount remaining to be paid for your second car.
 fields:
-  - Amount owing: second_car.loan
+  - Amount still owed: second_car.loan
     datatype: currency
     min: 0
 ---
@@ -892,7 +910,7 @@ id: trade tools
 question: |
   Professional books or trade tools
 subquestion: |
-  The law protects up to $1500 worth of professional books or trade tools. Examples include a set of reference books for teaching or a lawnmower for your landscaping business.
+  The law protects up to $1,500 worth of trade tools or books that you use for your job or business. Examples include a set of reference books for teaching or a lawnmower for your landscaping business.
   
   Do you have any professional books or trade tools?
 fields:
@@ -909,7 +927,7 @@ question: |
 subquestion: |
   The law protects up to $4,000 worth of money or personal property from collection.
   
-  Money you receive from an **{exempt}** source like Social Security does not count against the $4,000. This is true even if it is deposited in a bank account with other money.
+  Money you receive from an **{exempt}** source, such as Social Security, does not count towards the $4,000 limit. This is true even if it is deposited in a bank account with other money.
   
   Which of these do you own? Check all that apply.
 fields:
@@ -1032,7 +1050,7 @@ id: debt collector name
 question: |
   What is the name of the company that is trying to collect a debt?
 fields:
-  - Name of debt collector : debt_collector.name.first
+  - Name of debt collector company: debt_collector.name.first
 ---
 id: debt collector address
 question: |
@@ -1068,6 +1086,22 @@ subject: |
   **Where can I find my account number?**
 content: |  
   Your account number should be listed on the collection notice or demand you received from ${ debt_collector.name.first }. It might be called your file or customer number.  
+---
+id: your address
+question: |
+  What is your current mailing address?
+fields:
+  - Street address: user.address.address
+    address autocomplete: True
+  - Address line 2: user.address.unit
+    required: False
+  - City: user.address.city
+  - State: user.address.state
+    code: |
+      states_list()
+    default: IL      
+  - ZIP code: user.address.zip
+    required: False
 ---
 id: mail letter date
 question: |
