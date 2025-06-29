@@ -217,6 +217,8 @@ terms:
       * Settlement or judgment from wrongful death or personal injury
       * Benefits from a life insurance policy
       * Cash awarded as victim of crime
+  - "equity": |
+      **Equity** is the amount of money you would get if you sold your car and paid off all loans or liens on the car.
 ---
 id: welcome
 question: |
@@ -288,8 +290,8 @@ subquestion: |
   * The name and address of the **{original creditor}**,
   * The amount and age of the debt, and
   * Why ${ debt_collector } thinks they have the authority to collect the debt.
-
-  If you include this in your letter within 30 days of first hearing from the debt collector, they have to stop collecting the debt until they send you this information.  
+  
+  If you include this in your letter within 30 days of first hearing from the debt collector **in writing**, they have to **pause** collecting the debt until they send you this information.
 fields:
   - no label: validate_debt
     datatype: yesnoradio
@@ -305,7 +307,7 @@ subquestion: |
   * "I am not responsible for the debt you're trying to collect."
   * "This debt is a result of identity theft."
   * "The amount that you are seeking to collect is incorrect."
-  * "I already paid this debt.
+  * "I already paid this debt."
   * "You have not provided enough proof that I owe this debt."
   * "This debt includes charges that I did not personally authorize."
 
@@ -361,9 +363,9 @@ continue button field: sued_by_debt_collector
 question: |
   Lawsuit information
 subquestion: |
-  If you receive a Complaint and Summons about a debt, you are being sued. To learn more about what to do when you are sued for debt collection, read ILAO's article about [**receiving a debt collection lawsuit**](https://www.illinoislegalaid.org/node/185946).
+  If you receive a Complaint and Summons about a debt, you are being sued. To learn more about what to do when you are sued for debt collection, read ILAO's article about [**responding to a debt collection lawsuit**](https://www.illinoislegalaid.org/node/185946).
   
-  You must respond to the lawsuit. In some cases you must file an **{Appearance}** and an **{Answer}**. To learn more about what to file, read ILAO's article about [**responding to a lawsuit**](https://www.illinoislegalaid.org/node/32236).
+  It is important to respond to the lawsuit. In some cases you must file an **{Appearance}** and an **{Answer}**. To learn more about what to file, read ILAO's article about [**responding to a lawsuit**](https://www.illinoislegalaid.org/node/32236). If you don't respond to the lawsuit, a default judgment will likely be entered against you. This would let the creditor try to garnish your wages or take money from your bank accounts.
 
   If you would like help finding free or low-cost legal services in your area, use [**Get Legal Help**](https://www.illinoislegalaid.org/get-legal-help).
 ---
@@ -443,7 +445,7 @@ subquestion: |
   
   You can protect up to $4,000 of any personal property you choose, except for real estate, with the "wildcard" exemption. This can be applied to cash, household goods, or to your car if you have more than $2,400 of equity in it.
 
-  To learn more, read ILAO's article about [**collection proof income and property**](https://www.illinoislegalaid.org/node/31936).
+  To learn more about collection proof income and property, read ILAO's article, [**Collecting from wages and bank accounts basics**](https://www.illinoislegalaid.org/node/31936).
 ---
 id: collection proof check
 question: |
@@ -622,8 +624,9 @@ fields:
 ---
 id: lives in home
 question: |
-  Do you live in the property you own?
+  Is this property your primary residence?
 subquestion: |
+  Your primary residence is where you live and where you are registered to vote.
 fields:
   - no label: lives_in_home
     datatype: yesnoradio
@@ -679,6 +682,8 @@ subquestion: |
   This is the amount a buyer would pay if you sold your home today. If you do not have a recent appraisal, estimate the value.
 
   If you live in and own a multi-unit building, enter the full value of the building.
+
+  You can look up an estimated value of your home on the internet. Try websites like Zillow and Redfin.
 fields:
   - Home value: home_value
     datatype: currency
@@ -830,7 +835,7 @@ subquestion: |
   
   If your car is worth more, it can still be protected if it is worth less than ${ currency(6400) }, minus what you still owe. 
   
-  Based on your answers, there is ${ currency(car_equity) } of value in your car. Your car is not exempt from collection.
+  Based on your answers, there is ${ currency(car_equity) } of **{equity}** in your car. Your car is not exempt from collection.
   
   You may want to talk with a lawyer about protecting your property from collection. If you would like help finding free or low-cost legal services in your area, use [**Get Legal Help**](https://www.illinoislegalaid.org/get-legal-help).
   
@@ -885,7 +890,7 @@ question: |
 subquestion: |
   If you have more than one car, your second car is usually **{exempt}** from collection if it is worth less than ${ currency(4000) }, minus what you still owe.
 
-  Based on your answers, there is ${ currency(second_car_equity) } of value in your second car. It is not exempt from collection.
+  Based on your answers, there is ${ currency(second_car_equity) } of **{equity}** in your second car. It is not exempt from collection.
   
   You may want to talk with a lawyer about protecting your property from collection. If you would like help finding free or low-cost legal services in your area, use [**Get Legal Help**](https://www.illinoislegalaid.org/get-legal-help).
 
@@ -898,7 +903,7 @@ continue button field: not_qualified_too_much_equity_both_cars
 question: |
   Too much equity in both cars
 subquestion: |
-  Based on your answers, there is ${ currency( car_equity + second_car_equity) } of value in your cars. This is not exempt from collection.
+  Based on your answers, there is ${ currency( car_equity + second_car_equity) } of **{equity}** in your cars. This is not exempt from collection.
   
   You may want to talk with a lawyer about protecting your property from collection. If you would like help finding free or low-cost legal services in your area, use [**Get Legal Help**](https://www.illinoislegalaid.org/get-legal-help).
 
@@ -1132,7 +1137,7 @@ event: get_docs_screen
 question: |
   Download
 subquestion: |
-  Your forms are ready. View and download your forms below. Click **Make changes** to fix any mistakes.
+  Your forms are ready. View and download your forms below. Click **:edit: Make changes** to fix any mistakes.
 
   After you get your letter, sign it, make a copy, and send it along with copies of any supporting documents to the debt collector.  
 
