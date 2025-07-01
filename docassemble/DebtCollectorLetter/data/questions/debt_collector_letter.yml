@@ -1386,7 +1386,7 @@ review:
   - Edit: user.name.first
     button: |
       **What is your name?**
-      ${ user.name.full(middle="full") }
+      ${ user.name_full() }
   - Edit: user.address.address
     button: |
       **What is your address?**
@@ -1610,7 +1610,7 @@ review:
   - Edit: user.name.first
     button: |
       **What is your name?**
-      ${ user.name.full(middle="full") }
+      ${ user.name_full() }
   - Edit: user.address.address
     button: |
       **What is your address?**
