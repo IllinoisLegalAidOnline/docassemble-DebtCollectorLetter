@@ -226,12 +226,12 @@ question: |
 subquestion: |
   Welcome to Illinois Legal Aid Online's **Debt collector letter** Easy Form.
 
-  This program creates a letter that can tell a debt collector:
+  This program creates a letter to a debt collector. You can choose to tell the debt collector:
 
   * To provide proof that you owe the debt,
   * That you disagree with the debt,
   * To stop contacting you, or only contact you in certain ways and times, and
-  * Your income and belongings are currently **{exempt}** from being collected, also called "collection proof".
+  * Your income and belongings are currently **{exempt}** from being collected, which means that they are protected by law. This is also called "collection proof."
   
   The letter can include any or all of these things. You may still owe some or all of the debt. This letter can help you be sure of what you owe, and may help you negotiate a payment plan that you can afford.
 
