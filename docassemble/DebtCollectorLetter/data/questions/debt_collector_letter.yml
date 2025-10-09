@@ -324,6 +324,11 @@ fields:
     show if:
       variable: dispute_debt
       is: True
+  - note: |
+      **Note:** The letter has space for about **300 characters** including spaces.
+    show if:
+      variable: dispute_debt
+      is: True
 ---    
 id: contact preferences
 question: |
@@ -345,6 +350,11 @@ fields:
       is: ways
     help: |
       Remember to list specific days and times you want to be contacted. Also list the phone numbers, mailing addresses, or email addresses that you want them to use.[NEWLINE][NEWLINE]Example: I will only accept text messages on weekdays from 2:00PM to 5:00PM.
+  - note: |
+      **Note:** The letter has space for about **300 characters** including spaces.      
+    show if:
+      variable: contact_prefs
+      is: ways
 ---
 id: unable to pay
 question: |
@@ -1222,7 +1232,7 @@ review:
   - Edit: reason_for_dispute
     button: |
       **Why do you dispute this debt?**
-      ${ reason_for_dispute }
+      ${ reason_for_dispute.replace("\n", " ").replace("\r", " ") }
     show if: dispute_debt
   - Edit: contact_prefs
     button: |
@@ -1235,7 +1245,7 @@ review:
   - Edit: acceptable_contact
     button: |
       **Contact is okay in these ways and times:**
-      ${ acceptable_contact }
+      ${ acceptable_contact.replace("\n", " ").replace("\r", " ") }
     show if: contact_prefs == "ways"
 
   - Edit: collection_proof_check
@@ -1427,7 +1437,7 @@ review:
   - Edit: reason_for_dispute
     button: |
       **Why do you dispute this debt?**
-      ${ reason_for_dispute }
+      ${ reason_for_dispute.replace("\n", " ").replace("\r", " ") }
     show if: dispute_debt
   - Edit: contact_prefs
     button: |
@@ -1440,10 +1450,8 @@ review:
   - Edit: acceptable_contact
     button: |
       **Contact is okay in these ways and times:**
-      ${ acceptable_contact }
+      ${ acceptable_contact.replace("\n", " ").replace("\r", " ") }
     show if: contact_prefs == "ways"
-
-
 
 ---
 id: calculator review screen
