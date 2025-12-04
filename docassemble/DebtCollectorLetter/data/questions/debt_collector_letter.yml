@@ -221,13 +221,7 @@ terms:
   - "equity": |
       **Equity** is the amount of money you would get if you sold your car and paid off all loans or liens on the car.
   - "Household goods": |
-      **Household goods** include food, eating and cooking utensils, bedding, furniture, books, refrigerator,  stove, microwave oven, kitchen appliances, necessary  provisions, washing machine, clothes dryer, vacuum  cleaner, yard equipment and household equipment and tools.
-      
-      Personal possessions, including, but not limited to, clothing, pets, personal health aids, medications, computers or similar electronic devices and telephones, are also considered **household goods**.
-  - "household goods": |
-      **Household goods** include food, eating and cooking utensils, bedding, furniture, books, refrigerator,  stove, microwave oven, kitchen appliances, necessary  provisions, washing machine, clothes dryer, vacuum  cleaner, yard equipment and household equipment and tools.
-      
-      Personal possessions, including, but not limited to, clothing, pets, personal health aids, medications, computers or similar electronic devices and telephones, are also considered **household goods**.
+      **Household goods** include food, eating and cooking utensils, bedding, furniture, books, refrigerator,  stove, microwave oven, kitchen appliances, necessary  provisions, washing machine, clothes dryer, vacuum  cleaner, yard equipment and household equipment and tools. [NEWLINE][NEWLINE] Personal possessions, like clothing, pets, personal health aids, medications, computers or similar electronic devices and telephones, are also considered **household goods**.
 ---
 id: welcome
 question: |
@@ -458,7 +452,7 @@ subquestion: |
   
   * Income from employment, up to $675 per week, is also **{exempt}**.
   
-  * If you own your home, up to $50,000 in equity is protected. If you own the home with another person, up to $100,000 is protected.
+  * If you own your home, up to $50,000 in equity is protected. If you co-own the home with another person, up to $100,000 is protected.
 
   * Up to $3,600 of equity is protected for one car.
 
@@ -960,9 +954,9 @@ fields:
 ---
 id: other item worth more than 5000
 question: |
-  Do you have any other property items worth more than $5,000?
+  Do you have a single item of property worth more than $5,000?
 subquestion: |
-  This could be:
+  This could be a:
   
   * A piece of furniture,
   * An appliance,
@@ -1415,7 +1409,7 @@ review:
     show if: collection_proof_check == "Yes"    
   - Edit: has_single_item
     button: |
-      **Do you have other property worth more than $5,000?**
+      **Do you have a single item of property worth more than $5,000?**
       ${ word(yesno(has_single_item)) }
     show if: collection_proof_check == "Yes"    
   - Edit: has_property_money
@@ -1633,7 +1627,7 @@ review:
     show if: collection_proof_check == "Yes"    
   - Edit: has_single_item
     button: |
-      **Do you have other property worth more than $5,000?**
+      **Do you have a single item of property worth more than $5,000?**
       ${ word(yesno(has_single_item)) }
     show if: collection_proof_check == "Yes"    
   - Edit: has_property_money
