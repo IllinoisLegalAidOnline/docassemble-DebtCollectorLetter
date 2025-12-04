@@ -70,8 +70,7 @@ code: |
           not_qualified_secondary_property
         else:
           if owns_home == True:
-            if is_married == True:
-              owns_with_spouse
+            owns_with_another
             home_value
             if has_mortgage:
               mortgage_remaining
@@ -136,6 +135,8 @@ reconsider: True
 code: |
   set_progress(60)
   has_tools
+  has_jewelry
+  has_single_item
   personal_property_choices
   if property_exempt == False:
     not_qualified_too_much_property
@@ -219,6 +220,14 @@ terms:
       * Cash awarded as victim of crime
   - "equity": |
       **Equity** is the amount of money you would get if you sold your car and paid off all loans or liens on the car.
+  - "Household goods": |
+      **Household goods** include food, eating and cooking utensils, bedding, furniture, books, refrigerator,  stove, microwave oven, kitchen appliances, necessary  provisions, washing machine, clothes dryer, vacuum  cleaner, yard equipment and household equipment and tools.
+      
+      Personal possessions, including, but not limited to, clothing, pets, personal health aids, medications, computers or similar electronic devices and telephones, are also considered **household goods**.
+  - "household goods": |
+      **Household goods** include food, eating and cooking utensils, bedding, furniture, books, refrigerator,  stove, microwave oven, kitchen appliances, necessary  provisions, washing machine, clothes dryer, vacuum  cleaner, yard equipment and household equipment and tools.
+      
+      Personal possessions, including, but not limited to, clothing, pets, personal health aids, medications, computers or similar electronic devices and telephones, are also considered **household goods**.
 ---
 id: welcome
 question: |
@@ -445,15 +454,21 @@ question: |
 subquestion: |
   If your income is from certain sources or below a certain level, debt collectors cannot legally seize your income. Also, the law protects the things you own up to a certain amount.
   
-  Income from **{public benefits}** or these **{other sources}** are exempt.
+  * Income from **{public benefits}** or these **{other sources}** are exempt.
   
-  Income from employment, up to $675 per week, is also **{exempt}**.
+  * Income from employment, up to $675 per week, is also **{exempt}**.
   
-  If you own your home, up to $15,000 in equity is protected. If you are married and own the home with your spouse, up to $30,000 is protected.
+  * If you own your home, up to $50,000 in equity is protected. If you own the home with another person, up to $100,000 is protected.
 
-  Up to $2,400 of equity is protected for one car.
+  * Up to $3,600 of equity is protected for one car.
+
+  * Trade tools or books that you use for your job or business worth up to $2,250 are exempt.
+
+  * A single piece of jewelry up to a value of $5,000 is also exempt.
   
-  You can protect up to $4,000 of any personal property you choose, except for real estate, with the "wildcard" exemption. This can be applied to cash, household goods, or to your car if you have more than $2,400 of equity in it.
+  * **{Household goods}** are protected. **Note:** If you own a single item with a resale value of more than $5,000 like a piece of furniture, an appliance, or an electronic device, a creditor could sue you to recover what is owed by selling the item.
+
+  * You can protect up to $4,000 of any personal property you choose, except for real estate, with the "wildcard" exemption. This can be applied to cash, household goods, or to your car if you have more than $3,600 of equity in it.
 
   To learn more about collection proof income and property, read ILAO's article, [**Collecting from wages and bank accounts basics**](https://www.illinoislegalaid.org/node/31936).
 ---
@@ -654,20 +669,22 @@ subquestion: |
   
   Click **Next** to continue making your letter.
 ---
-id: married
-question: |
-  Are you married?
-subquestion: |
-  If you are married and own the property with your spouse, more of the value of the home is **{exempt}**.
-fields:
-  - no label: is_married
-    datatype: yesnoradio
+#id: married
+#question: |
+#  Are you married?
+#subquestion: |
+#  If you are married and own the property with your spouse, more of the value of the home is **{exempt}**.
+#fields:
+#  - no label: is_married
+#    datatype: yesnoradio
 ---
-id: owns home with spouse
+id: co-owns home
 question: |
-  Do you own the home with your spouse?
+  Do you co-own the home with another person?
+subquestion: |
+  If you and another person are on the title or deed of the property, then you are co-owners.  
 fields:
-  - no label: owns_with_spouse
+  - no label: owns_with_another
     datatype: yesnoradio
 ---
 id: not qualified too much home equity
@@ -767,13 +784,10 @@ code: |
     if lives_in_home == False:
       home_equity_exempt = False
     else:
-      if is_married == True:
-        if owns_with_spouse == True:
-          homestead_exemption = 30000
-        else:
-          homestead_exemption = 15000
+      if owns_with_another == True:
+        homestead_exemption = 100000
       else:
-        homestead_exemption = 15000
+        homestead_exemption = 50000
       home_equity = home_value - mortgage_remaining - other_home_loans_remaining
       if home_equity > homestead_exemption:
         home_equity_exempt = False
@@ -841,9 +855,9 @@ continue button field: not_qualified_too_much_car_equity
 question: |
   Too much equity in your car
 subquestion: |
-  Your car is **{exempt}** from collection if it is worth less than ${ currency(2400) }, minus what you still owe.
+  Your car is **{exempt}** from collection if it is worth less than ${ currency(3600) }, minus what you still owe.
   
-  If your car is worth more, it can still be protected if it is worth less than ${ currency(6400) }, minus what you still owe. 
+  If your car is worth more, it can still be protected if it is worth less than ${ currency(7600) }, minus what you still owe. 
   
   Based on your answers, there is ${ currency(car_equity) } of **{equity}** in your car. Your car is not exempt from collection.
   
@@ -925,7 +939,7 @@ id: trade tools
 question: |
   Professional books or trade tools
 subquestion: |
-  The law protects up to $1,500 worth of trade tools or books that you use for your job or business. Examples include a set of reference books for teaching or a lawnmower for your landscaping business.
+  The law protects up to $2,250 worth of trade tools or books that you use for your job or business. Examples include a set of reference books for teaching or a lawnmower for your landscaping business.
   
   Do you have any professional books or trade tools?
 fields:
@@ -935,6 +949,31 @@ fields:
     datatype: currency
     show if: has_tools
 ---
+id: jewelry
+question: |
+  Do you have jewelry worth more than $5,000?
+subquestion: |
+  The law protects a single piece of jewelry worth up to $5,000.
+fields:
+  - no label: has_jewelry
+    datatype: yesnoradio
+---
+id: other item worth more than 5000
+question: |
+  Do you have any other property items worth more than $5,000?
+subquestion: |
+  This could be:
+  
+  * A piece of furniture,
+  * An appliance,
+  * An electronic device,
+  * Yard equipment,
+  * A precious item, or
+  * Utensils or a set of utensils.
+fields:
+  - no label: has_single_item
+    datatype: yesnoradio
+---
 id: personal property
 continue button field: personal_property_choices
 question: |
@@ -943,6 +982,8 @@ subquestion: |
   The law protects up to $4,000 worth of money or personal property from collection.
   
   Money you receive from an **{exempt}** source, such as Social Security, does not count towards the $4,000 limit. This is true even if it is deposited in a bank account with other money.
+
+  Other property does not include **{household goods}**.
   
   Which of these do you own? Check all that apply.
 fields:
@@ -990,10 +1031,10 @@ code: |
       car_equity = car.value - car.loan
     else:
       car_equity = car.value
-    car_exemption = 2400 - car_equity
+    car_exemption = 3600 - car_equity
     if car_exemption < 0:
       # check if wildcard can be used to protect surplus car equity 
-      wildcard_exemption = 4000 - (car_equity - 2400)      
+      wildcard_exemption = 4000 - (car_equity - 3600)      
       car_uses_wildcard = True
       if wildcard_exemption < 0:
         is_car_exempt = False
@@ -1012,21 +1053,21 @@ code: |
           is_second_car_exempt = True
 ---
 # determines if tools and other personal property is exempt
+reconsider: True
 code: |
   if has_tools == True:
-    tools_exemption = 1500 - value_tools
+    tools_exemption = 2250 - value_tools
     if tools_exemption < 0:
-      wildcard_exemption = wildcard_exemption - (value_tools - 1500)
+      wildcard_exemption = wildcard_exemption - (value_tools - 2250)
 
   personal_property_value = sum_if_defined("value_money", "value_other") 
 
   wildcard_exemption = wildcard_exemption - personal_property_value
-  if wildcard_exemption < 0:
+  if wildcard_exemption < 0 or has_jewelry or has_single_item:
     # property is beyond exemption
     property_exempt = False
   else:
     property_exempt = True
-reconsider: True
 ---
 id: property qualified
 continue button field: property_qualified
@@ -1285,16 +1326,11 @@ review:
       **Do you live in the property you own?**
       ${ word(yesno(lives_in_home)) }
     show if: collection_proof_check == "Yes" and owns_home
-  - Edit: is_married
+  - Edit: owns_with_another
     button: |
-      **Are you married?**
-      ${ word(yesno(is_married)) }
+      **Do you co-own the property with another person?**
+      ${ word(yesno(owns_with_another)) }
     show if: collection_proof_check == "Yes" and owns_home
-  - Edit: owns_with_spouse
-    button: |
-      **Do you own the property with your spouse?**
-      ${ word(yesno(owns_with_spouse)) }
-    show if: collection_proof_check == "Yes" and owns_home and is_married
   - Edit: home_value
     button: |
       **What is the value of your home?**
@@ -1372,6 +1408,16 @@ review:
       **How much are your professional books or trade tools worth?**
       ${ currency(value_tools) }
     show if: collection_proof_check == "Yes" and has_tools
+  - Edit: has_jewelry
+    button: |
+      **Do you have jewelry worth more than $5,000?**
+      ${ word(yesno(has_jewelry)) }
+    show if: collection_proof_check == "Yes"    
+  - Edit: has_single_item
+    button: |
+      **Do you have other property worth more than $5,000?**
+      ${ word(yesno(has_single_item)) }
+    show if: collection_proof_check == "Yes"    
   - Edit: has_property_money
     button: |
       **Do you have money in cash or in a bank account?**
@@ -1384,7 +1430,7 @@ review:
     show if: collection_proof_check == "Yes" and has_property_money
   - Edit: has_property_other
     button: |
-      **Do you own other things (not including necessary items)?**
+      **Do you own other things (not including household goods)?**
       ${ word(yesno(has_property_other)) }
     show if: collection_proof_check == "Yes"
   - Edit: value_other
@@ -1498,16 +1544,11 @@ review:
       **Do you live in the property you own?**
       ${ word(yesno(lives_in_home)) }
     show if: collection_proof_check == "Yes" and owns_home
-  - Edit: is_married
+  - Edit: owns_with_another
     button: |
-      **Are you married?**
-      ${ word(yesno(is_married)) }
+      **Do you co-own the property with another person?**
+      ${ word(yesno(owns_with_another)) }
     show if: collection_proof_check == "Yes" and owns_home
-  - Edit: owns_with_spouse
-    button: |
-      **Do you own the property with your spouse?**
-      ${ word(yesno(owns_with_spouse)) }
-    show if: collection_proof_check == "Yes" and owns_home and is_married
   - Edit: home_value
     button: |
       **What is the value of your home?**
@@ -1585,6 +1626,16 @@ review:
       **How much are your professional books or trade tools worth?**
       ${ currency(value_tools) }
     show if: collection_proof_check == "Yes" and has_tools
+  - Edit: has_jewelry
+    button: |
+      **Do you have jewelry worth more than $5,000?**
+      ${ word(yesno(has_jewelry)) }
+    show if: collection_proof_check == "Yes"    
+  - Edit: has_single_item
+    button: |
+      **Do you have other property worth more than $5,000?**
+      ${ word(yesno(has_single_item)) }
+    show if: collection_proof_check == "Yes"    
   - Edit: has_property_money
     button: |
       **Do you have money in cash or in a bank account?**
@@ -1597,7 +1648,7 @@ review:
     show if: collection_proof_check == "Yes" and has_property_money
   - Edit: has_property_other
     button: |
-      **Do you own other things (not including necessary items)?**
+      **Do you own other things (not including household goods)?**
       ${ word(yesno(has_property_other)) }
     show if: collection_proof_check == "Yes"
   - Edit: value_other
